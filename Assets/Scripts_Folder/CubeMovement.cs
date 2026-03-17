@@ -1,13 +1,4 @@
 using UnityEngine;
-
-// Borra todo lo anterior del Player y empieza con este script limpio
-// El Player debe ser un CUBO con SOLO estos componentes:
-//   - Transform
-//   - Mesh Filter + Mesh Renderer (vienen solos)
-//   - Box Collider (viene solo con el cubo)
-//   - Character Controller  <-- agrégalo manualmente
-//   - Este script
-
 [RequireComponent(typeof(CharacterController))]
 public class CubeMovement : MonoBehaviour
 {
@@ -38,7 +29,6 @@ public class CubeMovement : MonoBehaviour
 
         cc.Move(dir * speed * Time.deltaTime);
 
-        // Gravedad simple
         cc.Move(Vector3.down * 9.8f * Time.deltaTime);
     }
 }

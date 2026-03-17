@@ -1,10 +1,9 @@
 using UnityEngine;
-using TMPro; // Necesario para usar TextMeshPro
+using TMPro; 
 
 public class TableController : MonoBehaviour
 {
     [Header("Referencias Visuales")]
-    // ¡AQUÍ ESTÁ EL CAMBIO! Agregamos UGUI al final
     public TextMeshProUGUI exclamationMark;
 
     [Header("Ajustes de Tiempo")]
