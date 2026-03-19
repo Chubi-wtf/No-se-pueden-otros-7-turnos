@@ -57,7 +57,6 @@ public class LimpiarMinijuego : MonoBehaviour
             c.a = porcentaje;
             manchaImagen.color = c;
 
-            // 3.  de Victoria
             if (suciedadActual <= 0)
             {
                 GanarMinijuego();
@@ -75,8 +74,12 @@ public class LimpiarMinijuego : MonoBehaviour
     void PerderMinijuego()
     {
         minijuegoActivo = false;
-        Debug.Log("¡Tiempo agotado! La mesa sigue sucia.");
-        MinigameManager.Instance.CerrarMinijuego(this.gameObject);
+        Debug.Log("¡Tiempo agotado!");
 
+        SanidadManager.Instance.RecibirDañoMental();
+
+        MinigameManager.Instance.CerrarMinijuego(this.gameObject);
     }
+
+
 }
