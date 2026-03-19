@@ -1,5 +1,5 @@
 using UnityEngine;
-using UnityEngine.UI; 
+using UnityEngine.UI;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 
@@ -10,15 +10,16 @@ public class SanidadManager : MonoBehaviour
     [Header("Valores de Sanidad")]
     public float sanidadMaxima = 100f;
     public float sanidadActual;
-    public float dañoPorFallo = 25f;
+    public float daoPorFallo = 25f;
+    public float recuperacionPorExito = 25f;
 
     [Header("Interfaz (UI)")]
-    public Slider barraSanidad; 
+    public Slider barraSanidad;
 
     [Header("Efectos Visuales")]
     public Volume volumenGlobal;
     private ColorAdjustments ajustesColor;
-    private Vignette efectoVinetado; 
+    private Vignette efectoVinetado;
 
     void Awake()
     {
@@ -38,43 +39,40 @@ public class SanidadManager : MonoBehaviour
         {
             volumenGlobal.profile.TryGet(out ajustesColor);
             volumenGlobal.profile.TryGet(out efectoVinetado);
-
             ActualizarVisuales();
         }
     }
 
     public void RecibirDañoMental()
     {
-        sanidadActual -= dañoPorFallo;
-        if (sanidadActual < 0f) sanidadActual = 0f;
-
+        sanidadActual = Mathf.Max(0f, sanidadActual - daoPorFallo);
         ActualizarVisuales();
 
         if (sanidadActual <= 0f)
-        {
-            Debug.Log("¡COLAPSO MENTAL! Has perdido la partida.");
-        }
+            Debug.Log("COLAPSO MENTAL! Has perdido la partida.");
+    }
+
+    public void RecuperarSanidad()
+    {
+        sanidadActual = Mathf.Min(sanidadMaxima, sanidadActual + recuperacionPorExito);
+        ActualizarVisuales();
+        Debug.Log($"Sanidad recuperada. Actual: {sanidadActual}");
     }
 
     void ActualizarVisuales()
     {
-        float porcentajeCordura = sanidadActual / sanidadMaxima;
+        float porcentaje = sanidadActual / sanidadMaxima;
 
         if (barraSanidad != null)
-        {
             barraSanidad.value = sanidadActual;
-        }
 
         if (ajustesColor != null)
         {
-            ajustesColor.postExposure.value = Mathf.Lerp(-2.5f, 0f, porcentajeCordura);
-            ajustesColor.contrast.value = Mathf.Lerp(-40f, 0f, porcentajeCordura);
+            ajustesColor.postExposure.value = Mathf.Lerp(-2.5f, 0f, porcentaje);
+            ajustesColor.contrast.value = Mathf.Lerp(-40f, 0f, porcentaje);
         }
 
         if (efectoVinetado != null)
-        {
-        
-            efectoVinetado.intensity.value = Mathf.Lerp(0.6f, 0f, porcentajeCordura);
-        }
+            efectoVinetado.intensity.value = Mathf.Lerp(0.6f, 0f, porcentaje);
     }
 }

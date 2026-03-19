@@ -1,5 +1,5 @@
 using UnityEngine;
-using TMPro; 
+using TMPro;
 
 public class TableController : MonoBehaviour
 {
@@ -19,36 +19,24 @@ public class TableController : MonoBehaviour
     void Start()
     {
         if (exclamationMark != null)
-        {
             exclamationMark.gameObject.SetActive(false);
-        }
     }
 
     void Update()
     {
-        if (isWaitingForFood)
-        {
-            timeRemaining -= Time.deltaTime;
+        if (!isWaitingForFood) return;
 
-            float timePercentage = timeRemaining / maxWaitTime;
+        timeRemaining -= Time.deltaTime;
+        float timePercentage = timeRemaining / maxWaitTime;
 
-            if (timePercentage > 0.5f)
-            {
-                exclamationMark.color = colorGood;
-            }
-            else if (timePercentage > 0.2f)
-            {
-                exclamationMark.color = colorWarning;
-            }
-            else if (timePercentage > 0f)
-            {
-                exclamationMark.color = colorCritical;
-            }
-            else
-            {
-                FailOrder();
-            }
-        }
+        if (timePercentage > 0.5f)
+            exclamationMark.color = colorGood;
+        else if (timePercentage > 0.2f)
+            exclamationMark.color = colorWarning;
+        else if (timePercentage > 0f)
+            exclamationMark.color = colorCritical;
+        else
+            FailOrder();
     }
 
     public void ReceiveNewOrder()
@@ -63,13 +51,19 @@ public class TableController : MonoBehaviour
     {
         isWaitingForFood = false;
         exclamationMark.gameObject.SetActive(false);
-        Debug.Log("¡Pedido entregado! Mantenemos la sanidad.");
+        Debug.Log("¡Pedido entregado!");
     }
 
     private void FailOrder()
     {
         isWaitingForFood = false;
         exclamationMark.gameObject.SetActive(false);
-        Debug.Log("El cliente se fue. ¡Penalización al medidor de estrés!");
+        Debug.Log("El cliente se fue. ¡Penalización!");
+
+        // Ahora sí penaliza la sanidad
+        if (SanidadManager.Instance != null)
+        {
+            SanidadManager.Instance.RecibirDañoMental();
+        }
     }
 }

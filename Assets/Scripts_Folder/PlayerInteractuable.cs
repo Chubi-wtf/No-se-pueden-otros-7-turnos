@@ -1,33 +1,25 @@
 using UnityEngine;
-using TMPro;
 using System.Collections;
 
 public class PlayerInteractuable : MonoBehaviour
 {
-    [Header("Referencias UI (Generales)")]
-    public GameObject alertaPanel;
-    public TextMeshProUGUI alertaText;
-
     private ZonaInteractuable zonaActual;
     private Coroutine rutinaEspera;
 
-    void Start()
+    void OnTriggerStay(Collider other)
     {
-        if (alertaPanel != null) alertaPanel.SetActive(false);
-    }
+        if (zonaActual != null) return;
 
-    void OnTriggerEnter(Collider other)
-    {
-        ZonaInteractuable zona = other.GetComponent<ZonaInteractuable>();
+        ZonaInteractuable zona = other.GetComponentInParent<ZonaInteractuable>();
 
-        if (zona != null)
+        if (zona != null && zona.tareaActiva)
         {
             zonaActual = zona;
-            alertaText.text = zona.alertMessage;
-            alertaPanel.SetActive(true);
 
-           
             Time.timeScale = 0f;
+
+            if (UI_Manager.instance != null)
+                UI_Manager.instance.MostrarAlerta(zona.alertMessage);
 
             rutinaEspera = StartCoroutine(EsperarYAbrirMinijuego(zona));
         }
@@ -35,16 +27,19 @@ public class PlayerInteractuable : MonoBehaviour
 
     void OnTriggerExit(Collider other)
     {
-      
-        ZonaInteractuable zona = other.GetComponent<ZonaInteractuable>();
+        ZonaInteractuable zona = other.GetComponentInParent<ZonaInteractuable>();
+
         if (zona != null && zona == zonaActual)
         {
             if (rutinaEspera != null)
             {
                 StopCoroutine(rutinaEspera);
+                rutinaEspera = null;
             }
 
-            alertaPanel.SetActive(false);
+            if (UI_Manager.instance != null)
+                UI_Manager.instance.cerrarPanel();
+
             zonaActual = null;
 
             Time.timeScale = 1f;
@@ -57,10 +52,12 @@ public class PlayerInteractuable : MonoBehaviour
 
         if (zona != null && zonaActual == zona)
         {
-            alertaPanel.SetActive(false);
+            if (UI_Manager.instance != null)
+                UI_Manager.instance.cerrarPanel();
 
             zonaActual = null;
 
+            
             zona.Interact();
         }
     }
