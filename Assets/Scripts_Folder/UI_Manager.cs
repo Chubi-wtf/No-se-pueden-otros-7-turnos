@@ -8,7 +8,7 @@ public class UI_Manager : MonoBehaviour
     public GameObject AlertPanel;
     public TextMeshProUGUI AlertText;
 
-    void awake()
+    void Awake()
     {
         instance = this;
     }

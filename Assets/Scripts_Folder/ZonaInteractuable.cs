@@ -7,38 +7,17 @@ public class ZonaInteractuable : MonoBehaviour
     public GameObject pantallaMinijuego;
     public UnityEvent onInteract;
 
-    private bool playerInRange = false;
-
-    void OnTriggerEnter(Collider other)
-    {
-        if (other.CompareTag("Player"))
-        {
-            playerInRange = true;
-        }
-    }
-
-    void OnTriggerExit(Collider other)
-    {
-        if (other.CompareTag("Player"))
-        {
-            playerInRange = false;
-        }
-    }
-
-    void Update()
-    {
-        if (playerInRange && Input.GetKeyDown(KeyCode.F))
-        {
-            Interact();
-        }
-    }
-
     public void Interact()
     {
-        if (Time.timeScale > 0f && pantallaMinijuego != null)
+        // Le quitamos la restricción de Time.timeScale > 0f
+        if (pantallaMinijuego != null)
         {
             MinigameManager.Instance.AbrirMinijuego(pantallaMinijuego);
         }
+
         onInteract.Invoke();
+
+        // El objeto desaparece de la escena
+        gameObject.SetActive(false);
     }
 }
