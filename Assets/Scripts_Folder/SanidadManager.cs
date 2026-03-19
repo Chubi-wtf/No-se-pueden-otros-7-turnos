@@ -21,30 +21,55 @@ public class SanidadManager : MonoBehaviour
     private ColorAdjustments ajustesColor;
     private Vignette efectoVinetado;
 
+    [Header("Gracia inicial")]
+    public float tiempoGracia = 3f;
+    private float timerGracia = 0f;
+    private bool graciaActiva = true;
+
     void Awake()
     {
         Instance = this;
+        // Fuerza 100 en Awake
         sanidadActual = sanidadMaxima;
 
         if (barraSanidad != null)
         {
             barraSanidad.maxValue = sanidadMaxima;
-            barraSanidad.value = sanidadActual;
+            barraSanidad.value = sanidadMaxima; 
         }
     }
 
     void Start()
     {
+        sanidadActual = sanidadMaxima;
+
         if (volumenGlobal != null)
         {
             volumenGlobal.profile.TryGet(out ajustesColor);
             volumenGlobal.profile.TryGet(out efectoVinetado);
-            ActualizarVisuales();
+        }
+
+        ActualizarVisuales();
+    }
+
+    void Update()
+    {
+        if (graciaActiva)
+        {
+            timerGracia += Time.deltaTime;
+            if (timerGracia >= tiempoGracia)
+                graciaActiva = false;
         }
     }
 
     public void RecibirDañoMental()
     {
+        if (graciaActiva)
+        {
+            Debug.Log("Daño bloqueado por gracia inicial.");
+            return;
+        }
+
         sanidadActual = Mathf.Max(0f, sanidadActual - daoPorFallo);
         ActualizarVisuales();
 
@@ -56,23 +81,22 @@ public class SanidadManager : MonoBehaviour
     {
         sanidadActual = Mathf.Min(sanidadMaxima, sanidadActual + recuperacionPorExito);
         ActualizarVisuales();
-        Debug.Log($"Sanidad recuperada. Actual: {sanidadActual}");
     }
 
     void ActualizarVisuales()
     {
-        float porcentaje = sanidadActual / sanidadMaxima;
+        float p = sanidadActual / sanidadMaxima;
 
         if (barraSanidad != null)
             barraSanidad.value = sanidadActual;
 
         if (ajustesColor != null)
         {
-            ajustesColor.postExposure.value = Mathf.Lerp(-2.5f, 0f, porcentaje);
-            ajustesColor.contrast.value = Mathf.Lerp(-40f, 0f, porcentaje);
+            ajustesColor.postExposure.value = Mathf.Lerp(-2.5f, 0f, p);
+            ajustesColor.contrast.value = Mathf.Lerp(-40f, 0f, p);
         }
 
         if (efectoVinetado != null)
-            efectoVinetado.intensity.value = Mathf.Lerp(0.6f, 0f, porcentaje);
+            efectoVinetado.intensity.value = Mathf.Lerp(0.6f, 0f, p);
     }
 }

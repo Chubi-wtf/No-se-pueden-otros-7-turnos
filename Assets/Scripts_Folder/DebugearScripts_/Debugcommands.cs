@@ -6,8 +6,11 @@ public class DebugCommands : MonoBehaviour
     [Header("Minijuego de Cocina")]
     public GameObject canvasMinijuegoCocina;
 
-    [Header("Minijuego del Café")]
+    [Header("Minijuego del Cafe")]
     public GameObject canvasMinijuegoCafe;
+
+    [Header("Minijuego de Limpiar")]
+    public GameObject canvasMinijuegoLimpiar;
 
     [Header("Reinicio")]
     public float tiempoParaReiniciar = 3f;
@@ -15,21 +18,15 @@ public class DebugCommands : MonoBehaviour
 
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.F1))
-            ForzarMinijuegoCocina();
-
-        if (Input.GetKeyDown(KeyCode.F2))
-            ForzarMinijuegoCafe();
+        if (Input.GetKeyDown(KeyCode.F1)) ForzarMinijuego(canvasMinijuegoCocina, "Cocina");
+        if (Input.GetKeyDown(KeyCode.F2)) ForzarMinijuego(canvasMinijuegoCafe, "Cafe");
+        if (Input.GetKeyDown(KeyCode.F3)) ForzarMinijuego(canvasMinijuegoLimpiar, "Limpiar");
 
         if (Input.GetKey(KeyCode.R))
         {
             timerR += Time.unscaledDeltaTime;
-
-            float progreso = timerR / tiempoParaReiniciar;
-            Debug.Log($"Reiniciando... {(int)(progreso * 100)}%");
-
-            if (timerR >= tiempoParaReiniciar)
-                Reiniciar();
+            Debug.Log($"Reiniciando... {(int)(timerR / tiempoParaReiniciar * 100)}%");
+            if (timerR >= tiempoParaReiniciar) Reiniciar();
         }
         else
         {
@@ -37,21 +34,15 @@ public class DebugCommands : MonoBehaviour
         }
     }
 
-    void ForzarMinijuegoCocina()
+    void ForzarMinijuego(GameObject canvas, string nombre)
     {
-        if (canvasMinijuegoCocina == null) { Debug.LogWarning("DebugCommands: Canvas Cocina no asignado."); return; }
-        MinigameManager.Instance?.AbrirMinijuego(canvasMinijuegoCocina);
-    }
-
-    void ForzarMinijuegoCafe()
-    {
-        if (canvasMinijuegoCafe == null) { Debug.LogWarning("DebugCommands: Canvas Café no asignado."); return; }
-        MinigameManager.Instance?.AbrirMinijuego(canvasMinijuegoCafe);
+        if (canvas == null) { Debug.LogWarning($"DebugCommands: Canvas {nombre} no asignado."); return; }
+        MinigameManager.Instance?.AbrirMinijuego(canvas);
     }
 
     void Reiniciar()
     {
-        Time.timeScale = 1f; // por si estaba pausado
+        Time.timeScale = 1f;
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
 }

@@ -32,12 +32,15 @@ public class CookingMinigame : MonoBehaviour
     [Header("UI")]
     public TextMeshProUGUI textoOrden;      
     public TextMeshProUGUI textoResultado;
+    public TextMeshProUGUI textoTemporizador; 
 
-    
+
     private Transform panelIngredientes;
     private List<string> secuenciaActual = new List<string>();
     private int slotsBien = 0;
     private bool terminado = false;
+    private float tiempoMaximo = 7f;
+    private float tiempoRestante = 0f;
 
     Sprite GetSprite(string nombre)
     {
@@ -80,6 +83,7 @@ public class CookingMinigame : MonoBehaviour
     {
         slotsBien = 0;
         terminado = false;
+        tiempoRestante = tiempoMaximo;
 
         if (textoResultado != null) textoResultado.gameObject.SetActive(false);
 
@@ -95,7 +99,7 @@ public class CookingMinigame : MonoBehaviour
             slots[i].Resetear();
         }
 
-      
+        
         List<string> pool = new List<string>(secuenciaActual);
 
         Mezclar(pool);
@@ -128,6 +132,23 @@ public class CookingMinigame : MonoBehaviour
         foreach (Transform h in panelIngredientes) hijos.Add(h);
         Mezclar(hijos);
         for (int i = 0; i < hijos.Count; i++) hijos[i].SetSiblingIndex(i);
+    }
+
+
+    void Update()
+    {
+        if (terminado || !gameObject.activeInHierarchy) return;
+
+        tiempoRestante -= Time.unscaledDeltaTime;
+
+        if (textoTemporizador != null)
+            textoTemporizador.text = Mathf.Max(0f, tiempoRestante).ToString("F1") + "s";
+
+        if (tiempoRestante <= 0f)
+        {
+            terminado = true;
+            MostrarResultado("Tiempo agotado!", false);
+        }
     }
 
     public void VerificarProgreso()
