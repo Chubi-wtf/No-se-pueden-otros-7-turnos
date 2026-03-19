@@ -22,6 +22,8 @@ public class DebugCommands : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.F2)) ForzarMinijuego(canvasMinijuegoCafe, "Cafe");
         if (Input.GetKeyDown(KeyCode.F3)) ForzarMinijuego(canvasMinijuegoLimpiar, "Limpiar");
 
+        if (Input.GetKeyDown(KeyCode.F4)) ActivarTodasLasZonas();
+
         if (Input.GetKey(KeyCode.R))
         {
             timerR += Time.unscaledDeltaTime;
@@ -38,6 +40,19 @@ public class DebugCommands : MonoBehaviour
     {
         if (canvas == null) { Debug.LogWarning($"DebugCommands: Canvas {nombre} no asignado."); return; }
         MinigameManager.Instance?.AbrirMinijuego(canvas);
+    }
+
+    void ActivarTodasLasZonas()
+    {
+        ZonaInteractuable[] zonas = FindObjectsByType<ZonaInteractuable>(FindObjectsSortMode.None);
+
+        foreach (ZonaInteractuable zona in zonas)
+        {
+            if (!zona.tareaActiva)
+                zona.ActivarTarea();
+        }
+
+        Debug.Log($"DEBUG: {zonas.Length} zonas activadas.");
     }
 
     void Reiniciar()

@@ -29,13 +29,12 @@ public class SanidadManager : MonoBehaviour
     void Awake()
     {
         Instance = this;
-        // Fuerza 100 en Awake
         sanidadActual = sanidadMaxima;
 
         if (barraSanidad != null)
         {
             barraSanidad.maxValue = sanidadMaxima;
-            barraSanidad.value = sanidadMaxima; 
+            barraSanidad.value = sanidadMaxima;
         }
     }
 
@@ -50,6 +49,7 @@ public class SanidadManager : MonoBehaviour
         }
 
         ActualizarVisuales();
+        MusicaManager.Instance?.ActualizarPitch(1f);
     }
 
     void Update()
@@ -85,18 +85,20 @@ public class SanidadManager : MonoBehaviour
 
     void ActualizarVisuales()
     {
-        float p = sanidadActual / sanidadMaxima;
+        float porcentaje = sanidadActual / sanidadMaxima;
 
         if (barraSanidad != null)
             barraSanidad.value = sanidadActual;
 
         if (ajustesColor != null)
         {
-            ajustesColor.postExposure.value = Mathf.Lerp(-2.5f, 0f, p);
-            ajustesColor.contrast.value = Mathf.Lerp(-40f, 0f, p);
+            ajustesColor.postExposure.value = Mathf.Lerp(-2.5f, 0f, porcentaje);
+            ajustesColor.contrast.value = Mathf.Lerp(-40f, 0f, porcentaje);
         }
 
         if (efectoVinetado != null)
-            efectoVinetado.intensity.value = Mathf.Lerp(0.6f, 0f, p);
+            efectoVinetado.intensity.value = Mathf.Lerp(0.6f, 0f, porcentaje);
+
+        MusicaManager.Instance?.ActualizarPitch(porcentaje);
     }
 }

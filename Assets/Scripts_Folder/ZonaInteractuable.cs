@@ -9,17 +9,20 @@ public class ZonaInteractuable : MonoBehaviour
     public GameObject pantallaMinijuego;
     public UnityEvent onInteract;
 
-    [Header("Sistema de Tiempo y Visuales")]
+    [Header("Sistema de Tiempo")]
     public bool tareaActiva = false;
     public GameObject modeloVisual;
-    public TextMeshPro exclamacionFlotante;
-
-    [Header("Icono decorativo sobre el signo de exclamacion")]
-    
-    public SpriteRenderer iconoTarea;
-
     public float tiempoLimite = 15f;
     private float tiempoRestante;
+
+    [Header("Icono de estado (SpriteRenderer)")]
+    public SpriteRenderer iconoEstado;   
+    public Sprite spritebueno;           
+    public Sprite spriteMedio;           
+    public Sprite spriteMalo;            
+
+    [Header("Icono decorativo del tipo de tarea")]
+    public SpriteRenderer iconoTarea;    
 
     void Start()
     {
@@ -32,12 +35,13 @@ public class ZonaInteractuable : MonoBehaviour
 
         tiempoRestante -= Time.deltaTime;
 
-        if (exclamacionFlotante != null)
+        if (iconoEstado != null)
         {
             float p = tiempoRestante / tiempoLimite;
-            if (p > 0.5f) exclamacionFlotante.color = Color.green;
-            else if (p > 0.2f) exclamacionFlotante.color = Color.yellow;
-            else exclamacionFlotante.color = Color.red;
+
+            if (p > 0.5f) iconoEstado.sprite = spritebueno;
+            else if (p > 0.2f) iconoEstado.sprite = spriteMedio;
+            else iconoEstado.sprite = spriteMalo;
         }
 
         if (tiempoRestante <= 0f)
@@ -51,10 +55,10 @@ public class ZonaInteractuable : MonoBehaviour
 
         if (modeloVisual != null) modeloVisual.SetActive(true);
 
-        if (exclamacionFlotante != null)
+        if (iconoEstado != null)
         {
-            exclamacionFlotante.color = Color.green;
-            exclamacionFlotante.gameObject.SetActive(true);
+            iconoEstado.sprite = spritebueno;
+            iconoEstado.gameObject.SetActive(true);
         }
 
         if (iconoTarea != null) iconoTarea.gameObject.SetActive(true);
@@ -65,13 +69,13 @@ public class ZonaInteractuable : MonoBehaviour
         tareaActiva = false;
 
         if (modeloVisual != null) modeloVisual.SetActive(false);
-        if (exclamacionFlotante != null) exclamacionFlotante.gameObject.SetActive(false);
+        if (iconoEstado != null) iconoEstado.gameObject.SetActive(false);
         if (iconoTarea != null) iconoTarea.gameObject.SetActive(false);
     }
 
     private void FallarTarea()
     {
-        Debug.Log("El cliente se fue o la mancha se seco!");
+        Debug.Log("Tarea fallada!");
         ApagarTarea();
         SanidadManager.Instance?.RecibirDañoMental();
     }
