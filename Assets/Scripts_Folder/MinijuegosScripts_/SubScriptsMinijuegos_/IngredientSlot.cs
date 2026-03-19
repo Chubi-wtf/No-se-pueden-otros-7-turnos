@@ -1,50 +1,61 @@
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
+using System.Collections;
 
+[RequireComponent(typeof(Image))]
 public class IngredientSlot : MonoBehaviour, IDropHandler
 {
     [HideInInspector] public string ingredienteEsperado;
     [HideInInspector] public bool estaOcupado = false;
 
-    private Image imagenFondo;
+    private Image img;
 
-    private static readonly Color colorLibre = new Color(1f, 1f, 1f, 0.3f);
-    private static readonly Color colorCorrecto = new Color(0.3f, 1f, 0.3f, 0.5f);
-    private static readonly Color colorError = new Color(1f, 0.3f, 0.3f, 0.5f);
+    static readonly Color colorLibre = new Color(0.85f, 0.85f, 0.85f, 0.9f);
+    static readonly Color colorCorrecto = new Color(0.4f, 0.9f, 0.4f, 0.9f);
+    static readonly Color colorError = new Color(0.95f, 0.3f, 0.3f, 0.9f);
 
     void Awake()
     {
-        imagenFondo = GetComponent<Image>();
-        if (imagenFondo != null) imagenFondo.color = colorLibre;
+        img = GetComponent<Image>();
+        img.raycastTarget = true;   
+        img.color = colorLibre;
+    }
+
+    public void Resetear()
+    {
+        estaOcupado = false;
+        img.color = colorLibre;
+
+        foreach (Transform hijo in transform)
+            Destroy(hijo.gameObject);
     }
 
     public void OnDrop(PointerEventData e)
     {
         if (estaOcupado) return;
 
-        DraggableIngredient ingrediente = e.pointerDrag?.GetComponent<DraggableIngredient>();
-        if (ingrediente == null) return;
+        DraggableIngredient ing = e.pointerDrag?.GetComponent<DraggableIngredient>();
+        if (ing == null) return;
 
-        if (ingrediente.ingredienteName == ingredienteEsperado)
+        if (ing.ingredienteName == ingredienteEsperado)
         {
-            // Drop correcto
             estaOcupado = true;
-            ingrediente.ColocarEnSlot(transform);
-            if (imagenFondo != null) imagenFondo.color = colorCorrecto;
-
+            img.color = colorCorrecto;
+            ing.ColocarEnSlot(transform);
             CookingMinigame.Instance?.VerificarProgreso();
         }
         else
         {
-            StartCoroutine(FlashError());
+            StartCoroutine(FlashError(ing));
         }
     }
 
-    System.Collections.IEnumerator FlashError()
+    IEnumerator FlashError(DraggableIngredient ing)
     {
-        if (imagenFondo != null) imagenFondo.color = colorError;
-        yield return new WaitForSecondsRealtime(0.4f);
-        if (imagenFondo != null) imagenFondo.color = colorLibre;
+        img.color = colorError;
+        yield return new WaitForSecondsRealtime(0.35f);
+        img.color = colorLibre;
+        ing.VolverAlPanel();
     }
 }
