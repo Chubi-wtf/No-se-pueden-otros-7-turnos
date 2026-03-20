@@ -16,16 +16,22 @@ public class ZonaInteractuable : MonoBehaviour
     private float tiempoRestante;
 
     [Header("Icono de estado (SpriteRenderer)")]
-    public SpriteRenderer iconoEstado;   
-    public Sprite spritebueno;           
-    public Sprite spriteMedio;           
-    public Sprite spriteMalo;            
+    public SpriteRenderer iconoEstado;
+    public Sprite spritebueno;
+    public Sprite spriteMedio;
+    public Sprite spriteMalo;
 
     [Header("Icono decorativo del tipo de tarea")]
-    public SpriteRenderer iconoTarea;    
+    public SpriteRenderer iconoTarea;
 
     void Start()
     {
+        if (modeloVisual != null && modeloVisual.name == "Bandeja")
+            Debug.LogError($"ZonaInteractuable en '{gameObject.name}' tiene 'Bandeja' en Modelo Visual!");
+
+        if (pantallaMinijuego != null && pantallaMinijuego.name == "Bandeja")
+            Debug.LogError($"ZonaInteractuable en '{gameObject.name}' tiene 'Bandeja' en Pantalla Minijuego!");
+
         ApagarTarea();
     }
 
@@ -38,7 +44,6 @@ public class ZonaInteractuable : MonoBehaviour
         if (iconoEstado != null)
         {
             float p = tiempoRestante / tiempoLimite;
-
             if (p > 0.5f) iconoEstado.sprite = spritebueno;
             else if (p > 0.2f) iconoEstado.sprite = spriteMedio;
             else iconoEstado.sprite = spriteMalo;

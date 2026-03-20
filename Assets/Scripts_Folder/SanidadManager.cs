@@ -10,7 +10,7 @@ public class SanidadManager : MonoBehaviour
     [Header("Valores de Sanidad")]
     public float sanidadMaxima = 100f;
     public float sanidadActual;
-    public float daoPorFallo = 25f;
+    public float daoPorFallo = 20f;   
     public float recuperacionPorExito = 25f;
 
     [Header("Interfaz (UI)")]
@@ -64,17 +64,14 @@ public class SanidadManager : MonoBehaviour
 
     public void RecibirDañoMental()
     {
-        if (graciaActiva)
-        {
-            Debug.Log("Daño bloqueado por gracia inicial.");
-            return;
-        }
+        if (graciaActiva) { Debug.Log("Daño bloqueado por gracia."); return; }
+        AplicarDaño(daoPorFallo);
+    }
 
-        sanidadActual = Mathf.Max(0f, sanidadActual - daoPorFallo);
-        ActualizarVisuales();
-
-        if (sanidadActual <= 0f)
-            Debug.Log("COLAPSO MENTAL! Has perdido la partida.");
+    public void RecibirDañoPersonalizado(float cantidad)
+    {
+        if (graciaActiva) { Debug.Log("Daño bloqueado por gracia."); return; }
+        AplicarDaño(cantidad);
     }
 
     public void RecuperarSanidad()
@@ -83,22 +80,31 @@ public class SanidadManager : MonoBehaviour
         ActualizarVisuales();
     }
 
+    private void AplicarDaño(float cantidad)
+    {
+        sanidadActual = Mathf.Max(0f, sanidadActual - cantidad);
+        ActualizarVisuales();
+
+        if (sanidadActual <= 0f)
+            Debug.Log("COLAPSO MENTAL! Has perdido la partida.");
+    }
+
     void ActualizarVisuales()
     {
-        float porcentaje = sanidadActual / sanidadMaxima;
+        float p = sanidadActual / sanidadMaxima;
 
         if (barraSanidad != null)
             barraSanidad.value = sanidadActual;
 
         if (ajustesColor != null)
         {
-            ajustesColor.postExposure.value = Mathf.Lerp(-2.5f, 0f, porcentaje);
-            ajustesColor.contrast.value = Mathf.Lerp(-40f, 0f, porcentaje);
+            ajustesColor.postExposure.value = Mathf.Lerp(-2.5f, 0f, p);
+            ajustesColor.contrast.value = Mathf.Lerp(-40f, 0f, p);
         }
 
         if (efectoVinetado != null)
-            efectoVinetado.intensity.value = Mathf.Lerp(0.6f, 0f, porcentaje);
+            efectoVinetado.intensity.value = Mathf.Lerp(0.6f, 0f, p);
 
-        MusicaManager.Instance?.ActualizarPitch(porcentaje);
+        MusicaManager.Instance?.ActualizarPitch(p);
     }
 }

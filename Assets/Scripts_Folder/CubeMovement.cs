@@ -8,7 +8,6 @@ public class CubeMovement : MonoBehaviour
     public float velocidadCaminar = 7f;
     public float velocidadCorrer = 10f;
 
-    // ── buff de velocidad ─────────────────────────────────────────────────────
     private float multiplicadorBuff = 1f;
     private Coroutine rutinaBuff;
 
@@ -35,9 +34,7 @@ public class CubeMovement : MonoBehaviour
         cc.Move(Vector3.down * 9.8f * Time.deltaTime);
     }
 
-    /// <summary>
-    /// Llamado por LimpiarMinijuego cuando el jugador gana el evento buff.
-    /// </summary>
+    
     public void AplicarBuff(float multiplicador, float duracion)
     {
         if (rutinaBuff != null) StopCoroutine(rutinaBuff);
