@@ -1,7 +1,8 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
+using System.Collections;
 
 public class SanidadManager : MonoBehaviour
 {
@@ -10,7 +11,7 @@ public class SanidadManager : MonoBehaviour
     [Header("Valores de Sanidad")]
     public float sanidadMaxima = 100f;
     public float sanidadActual;
-    public float daoPorFallo = 20f;   
+    public float daoPorFallo = 20f;
     public float recuperacionPorExito = 25f;
 
     [Header("Interfaz (UI)")]
@@ -25,6 +26,9 @@ public class SanidadManager : MonoBehaviour
     public float tiempoGracia = 3f;
     private float timerGracia = 0f;
     private bool graciaActiva = true;
+
+    private bool inmunidadActiva = false;
+    private Coroutine rutinaInmunidad;
 
     void Awake()
     {
@@ -62,17 +66,21 @@ public class SanidadManager : MonoBehaviour
         }
     }
 
-    public void RecibirDa�oMental()
+
+    public void RecibirDañoMental()
     {
-        if (graciaActiva) { Debug.Log("Da�o bloqueado por gracia."); return; }
-        AplicarDa�o(daoPorFallo);
+        if (graciaActiva) { Debug.Log("Daño bloqueado por gracia."); return; }
+        if (inmunidadActiva) { Debug.Log("Daño bloqueado por inmunidad."); return; }
+        AplicarDaño(daoPorFallo);
     }
 
-    public void RecibirDa�oPersonalizado(float cantidad)
+    public void RecibirDañoPersonalizado(float cantidad)
     {
-        if (graciaActiva) { Debug.Log("Da�o bloqueado por gracia."); return; }
-        AplicarDa�o(cantidad);
+        if (graciaActiva) { Debug.Log("Daño bloqueado por gracia."); return; }
+        if (inmunidadActiva) { Debug.Log("Daño bloqueado por inmunidad."); return; }
+        AplicarDaño(cantidad);
     }
+
 
     public void RecuperarSanidad()
     {
@@ -80,7 +88,25 @@ public class SanidadManager : MonoBehaviour
         ActualizarVisuales();
     }
 
-    private void AplicarDa�o(float cantidad)
+
+
+    public void ActivarInmunidadCordura(float duracion)
+    {
+        if (rutinaInmunidad != null) StopCoroutine(rutinaInmunidad);
+        rutinaInmunidad = StartCoroutine(RutinaInmunidad(duracion));
+    }
+
+    private IEnumerator RutinaInmunidad(float duracion)
+    {
+        inmunidadActiva = true;
+        Debug.Log($"Inmunidad a pérdida de cordura activa por {duracion}s");
+        yield return new WaitForSeconds(duracion);
+        inmunidadActiva = false;
+        Debug.Log("Inmunidad de cordura expirada.");
+    }
+
+
+    private void AplicarDaño(float cantidad)
     {
         sanidadActual = Mathf.Max(0f, sanidadActual - cantidad);
         ActualizarVisuales();

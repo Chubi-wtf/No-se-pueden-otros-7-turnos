@@ -29,18 +29,57 @@ public class CookingMinigame : MonoBehaviour
     [Header("Sprites por nombre de ingrediente")]
     public List<SpriteEntry> spritePorNombre;
 
-    [Header("UI")]
-    public TextMeshProUGUI textoOrden;      
+    [Header("UI - Minijuego normal")]
+    public TextMeshProUGUI textoOrden;
     public TextMeshProUGUI textoResultado;
-    public TextMeshProUGUI textoTemporizador; 
+    public TextMeshProUGUI textoTemporizador;
 
+    // ── Evento de nervios ─────────────────────────────────────────────────────
+    [Header("Evento Nervios — aparece 1 de cada 5 veces")]
+    [Tooltip("Arrastra aquí el GameObject VentanaJuego — es el que tiembla")]
+    public RectTransform ventanaJuego;
 
+    [Tooltip("Panel superpuesto con instrucción y barra. Hijo de Canvas_MinijuegoCocina")]
+    public GameObject panelNervios;
+
+    [Tooltip("Texto de instrucción dentro de PanelNervios")]
+    public TextMeshProUGUI textoNervios;
+
+    [Tooltip("Slider que se llena al apretar Shift")]
+    public Slider barraCalma;
+
+    [Tooltip("Texto opcional sobre la barra, ej: 'Respira... 3/12'")]
+    public TextMeshProUGUI textoBarraCalma;
+
+    [Header("Ajustes del Evento Nervios")]
+    public float tiempoLimiteNervios = 8f;   // segundos para completar el ritual
+    public int pulsosShiftNecesarios = 12;  // pulsaciones de Shift necesarias
+    public float duracionBuff = 10f; // segundos de inmunidad a cordura
+
+    [Header("Debug")]
+    [Tooltip("Actívalo desde DebugCommands (F5) para forzar el microjuego de nervios ignorando el random")]
+    public bool forzarEventoNervios = false;
+
+    [Header("Shake")]
+    public float shakeMagnitud = 8f;          // intensidad del temblor
+
+    // ── estado privado ────────────────────────────────────────────────────────
     private Transform panelIngredientes;
     private List<string> secuenciaActual = new List<string>();
     private int slotsBien = 0;
     private bool terminado = false;
     private float tiempoMaximo = 7f;
     private float tiempoRestante = 0f;
+
+    private bool eventoNerviosActivo = false;
+    private bool nerviosResueltos = false;
+    private float tiempoRestanteNervios;
+    private int pulsosCompletados = 0;
+
+    private Vector3 posOriginalVentana;
+    private float shakeTimer = 0f;
+
+    // ─────────────────────────────────────────────────────────────────────────
 
     Sprite GetSprite(string nombre)
     {
@@ -67,8 +106,127 @@ public class CookingMinigame : MonoBehaviour
 
     void OnEnable()
     {
+        eventoNerviosActivo = forzarEventoNervios || (Random.Range(0, 5) == 0);
+        forzarEventoNervios = false;
+        nerviosResueltos = false;
+        pulsosCompletados = 0;
+        tiempoRestanteNervios = tiempoLimiteNervios;
+        shakeTimer = 0f;
+
+        if (eventoNerviosActivo)
+        {
+            if (ventanaJuego != null)
+                posOriginalVentana = ventanaJuego.localPosition;
+
+            if (panelNervios != null) panelNervios.SetActive(true);
+
+            if (barraCalma != null)
+            {
+                barraCalma.minValue = 0;
+                barraCalma.maxValue = pulsosShiftNecesarios;
+                barraCalma.value = 0;
+            }
+
+            ActualizarTextoNervios();
+        }
+        else
+        {
+            if (panelNervios != null) panelNervios.SetActive(false);
+            StartCoroutine(InicializarConDelay());
+        }
+    }
+
+    // ── Update principal ──────────────────────────────────────────────────────
+
+    void Update()
+    {
+        if (eventoNerviosActivo && !nerviosResueltos)
+        {
+            UpdateNervios();
+            return;
+        }
+
+        if (terminado || !gameObject.activeInHierarchy) return;
+
+        tiempoRestante -= Time.unscaledDeltaTime;
+
+        if (textoTemporizador != null)
+            textoTemporizador.text = Mathf.Max(0f, tiempoRestante).ToString("F1") + "s";
+
+        if (tiempoRestante <= 0f)
+        {
+            terminado = true;
+            MostrarResultado("Tiempo agotado!", false);
+        }
+    }
+
+    // ── Lógica del evento nervios ─────────────────────────────────────────────
+
+    void UpdateNervios()
+    {
+        tiempoRestanteNervios -= Time.unscaledDeltaTime;
+
+        // Shake — se suaviza según progreso de la barra
+        shakeTimer += Time.unscaledDeltaTime;
+        if (ventanaJuego != null)
+        {
+            float progreso = (float)pulsosCompletados / pulsosShiftNecesarios;
+            float magnitudAct = Mathf.Lerp(shakeMagnitud, 0f, progreso);
+            float xOff = Mathf.Sin(shakeTimer * 30f) * magnitudAct;
+            float yOff = Mathf.Cos(shakeTimer * 24f) * magnitudAct * 0.6f;
+            ventanaJuego.localPosition = posOriginalVentana + new Vector3(xOff, yOff, 0f);
+        }
+
+        // Tiempo agotado → sin buff
+        if (tiempoRestanteNervios <= 0f)
+        {
+            TerminarEventoNervios(buffGanado: false);
+            return;
+        }
+
+        // Detectar pulsación de Shift
+        if (Input.GetKeyDown(KeyCode.LeftShift) || Input.GetKeyDown(KeyCode.RightShift))
+        {
+            pulsosCompletados = Mathf.Min(pulsosCompletados + 1, pulsosShiftNecesarios);
+
+            if (barraCalma != null)
+                barraCalma.value = pulsosCompletados;
+
+            ActualizarTextoNervios();
+
+            if (pulsosCompletados >= pulsosShiftNecesarios)
+                TerminarEventoNervios(buffGanado: true);
+        }
+    }
+
+    void ActualizarTextoNervios()
+    {
+        if (textoNervios != null)
+            textoNervios.text = "¡La comanda te pone nervioso!\nAprieta <b>Shift</b> para respirar.";
+
+        if (textoBarraCalma != null)
+            textoBarraCalma.text = $"Respira... {pulsosCompletados}/{pulsosShiftNecesarios}";
+    }
+
+    void TerminarEventoNervios(bool buffGanado)
+    {
+        nerviosResueltos = true;
+
+        if (ventanaJuego != null)
+            ventanaJuego.localPosition = posOriginalVentana;
+
+        if (buffGanado)
+        {
+            SanidadManager.Instance?.ActivarInmunidadCordura(duracionBuff);
+            Debug.Log($"Buff de inmunidad concedido por {duracionBuff}s");
+        }
+
+        if (panelNervios != null) panelNervios.SetActive(false);
+
         StartCoroutine(InicializarConDelay());
     }
+
+    // ── Inicialización del minijuego ──────────────────────────────────────────
 
     IEnumerator InicializarConDelay()
     {
@@ -99,9 +257,7 @@ public class CookingMinigame : MonoBehaviour
             slots[i].Resetear();
         }
 
-        
         List<string> pool = new List<string>(secuenciaActual);
-
         Mezclar(pool);
 
         for (int i = 0; i < ingredientes.Count; i++)
@@ -134,22 +290,7 @@ public class CookingMinigame : MonoBehaviour
         for (int i = 0; i < hijos.Count; i++) hijos[i].SetSiblingIndex(i);
     }
 
-
-    void Update()
-    {
-        if (terminado || !gameObject.activeInHierarchy) return;
-
-        tiempoRestante -= Time.unscaledDeltaTime;
-
-        if (textoTemporizador != null)
-            textoTemporizador.text = Mathf.Max(0f, tiempoRestante).ToString("F1") + "s";
-
-        if (tiempoRestante <= 0f)
-        {
-            terminado = true;
-            MostrarResultado("Tiempo agotado!", false);
-        }
-    }
+    // ── Slots ─────────────────────────────────────────────────────────────────
 
     public void VerificarProgreso()
     {
