@@ -132,6 +132,7 @@ public class LimpiarMinijuego : MonoBehaviour
             if (suciedadActual <= 0f)
                 GanarMinijuego();
         }
+        if (PauseMenu.isPaused) return;
     }
 
     void ActualizarTextoBuff()

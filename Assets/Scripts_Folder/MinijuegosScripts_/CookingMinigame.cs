@@ -181,6 +181,7 @@ public class CookingMinigame : MonoBehaviour
             terminado = true;
             MostrarResultado("Tiempo agotado!", false);
         }
+        if (PauseMenu.isPaused) return;
     }
 
 

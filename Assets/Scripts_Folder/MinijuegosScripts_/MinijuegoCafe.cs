@@ -119,6 +119,7 @@ public class MinijuegoCafe : MonoBehaviour
         {
             GanarMinijuego();
         }
+        if (PauseMenu.isPaused) return;
     }
 
     void ActualizarTextoEvento()
