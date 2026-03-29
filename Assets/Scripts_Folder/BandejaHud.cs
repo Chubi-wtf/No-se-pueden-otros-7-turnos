@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-public class BandejaHUD : MonoBehaviour
+public class BandejaHud : MonoBehaviour
 {
     [Header("UI")]
     public Slider sliderBandeja;

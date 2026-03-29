@@ -24,6 +24,9 @@ public class DebugCommands : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.F4)) ActivarTodasLasZonas();
 
+        // F6 — fuerza Game Over
+        if (Input.GetKeyDown(KeyCode.F6)) GameoverManager.Instance?.ActivarGameOver();
+
         // F5 — Cocina forzando el microjuego de nervios (ignora el random 1/5)
         if (Input.GetKeyDown(KeyCode.F5)) ForzarCocinaConNervios();
 

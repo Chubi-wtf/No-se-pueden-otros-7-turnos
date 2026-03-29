@@ -112,7 +112,10 @@ public class SanidadManager : MonoBehaviour
         ActualizarVisuales();
 
         if (sanidadActual <= 0f)
-            Debug.Log("COLAPSO MENTAL! Has perdido la partida.");
+        {
+            Debug.Log("COLAPSO MENTAL!");
+            GameoverManager.Instance?.ActivarGameOver();
+        }
     }
 
     void ActualizarVisuales()
