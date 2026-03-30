@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 6ae0b72a8defd7d489562005a14dd94e
+guid: 8ea11c915221cc842b24f599383b4ff7
 TextureImporter:
   internalIDToNameTable: []
   externalObjects: {}
@@ -97,23 +97,23 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Barra_de_sanidadmala_0
+      name: Barra_de_tiempo_0
       rect:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 160
-        height: 640
+        width: 2048
+        height: 256
       alignment: 0
-      pivot: {x: 0.5, y: 0.5}
+      pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 25ad50a5c589ba043ab7ccc8a9bf2f94
-      internalID: 823647139
+      spriteID: cdd333ab770cc9d4bb20ffd405d4108a
+      internalID: 658155012
       vertices: []
       indices: 
       edges: []
@@ -122,7 +122,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 4bfbabf87d14cb34287628336edd9333
+    spriteID: cc936a11d1b54284fb3a3abe658397b7
     internalID: 0
     vertices: []
     indices: 
@@ -132,7 +132,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      Barra_de_sanidadmala_0: 823647139
+      Barra_de_tiempo_0: 658155012
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
