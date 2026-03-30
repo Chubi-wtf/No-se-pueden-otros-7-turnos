@@ -20,7 +20,6 @@ public class DraggableIngredient : MonoBehaviour,
     {
         rect = GetComponent<RectTransform>();
         group = GetComponent<CanvasGroup>();
-
         GetComponent<Image>().raycastTarget = true;
     }
 
@@ -57,8 +56,8 @@ public class DraggableIngredient : MonoBehaviour,
 
     public void OnEndDrag(PointerEventData e)
     {
-        group.blocksRaycasts = true;
         group.alpha = 1f;
+        group.blocksRaycasts = true; 
 
         if (transform.parent == rootCanvas.transform)
             VolverAlPanel();
@@ -78,5 +77,15 @@ public class DraggableIngredient : MonoBehaviour,
     {
         transform.SetParent(slot, false);
         rect.anchoredPosition = Vector2.zero;
+        group.blocksRaycasts = true; 
+        group.alpha = 1f;
+    }
+
+    public void ResetearEstado()
+    {
+        group.blocksRaycasts = true;
+        group.interactable = true;
+        group.alpha = 1f;
+        enabled = true;
     }
 }

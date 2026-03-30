@@ -7,7 +7,7 @@ using System.Collections.Generic;
 public class MinijuegoCafe : MonoBehaviour
 {
     [Header("Compartido")]
-    public TextMeshProUGUI textoTemporizador;
+    public Slider barraTemporizador;
     public TextMeshProUGUI textoFase;
 
     [Header("Fase 1 — Llenar el café")]
@@ -55,6 +55,12 @@ public class MinijuegoCafe : MonoBehaviour
         for (int i = 0; i < longitudSecuencia; i++)
             secuenciaActual.Add(teclasPermitidas[Random.Range(0, teclasPermitidas.Length)]);
 
+        if (barraTemporizador != null)
+        {
+            barraTemporizador.maxValue = tiempoMaximo;
+            barraTemporizador.value = tiempoRestante;
+        }
+
         if (posiblesCafes != null && posiblesCafes.Length > 0 && imagenCafe != null)
             imagenCafe.sprite = posiblesCafes[Random.Range(0, posiblesCafes.Length)];
         if (sliderCafe != null) { sliderCafe.minValue = 0f; sliderCafe.maxValue = 1f; sliderCafe.value = 0f; }
@@ -68,8 +74,22 @@ public class MinijuegoCafe : MonoBehaviour
         if (!minijuegoActivo || faseActual == Fase.Terminado) return;
 
         tiempoRestante -= Time.unscaledDeltaTime;
-        if (textoTemporizador != null)
-            textoTemporizador.text = Mathf.Max(0f, tiempoRestante).ToString("F1") + "s";
+
+        if (barraTemporizador != null)
+        {
+            barraTemporizador.value = tiempoRestante;
+
+            // NUEVO: Cambiar color de verde a rojo según el tiempo restante
+            if (barraTemporizador.fillRect != null)
+            {
+                Image fillImage = barraTemporizador.fillRect.GetComponent<Image>();
+                if (fillImage != null && barraTemporizador.maxValue > 0)
+                {
+                    float porcentaje = barraTemporizador.value / barraTemporizador.maxValue;
+                    fillImage.color = Color.Lerp(Color.red, Color.green, porcentaje);
+                }
+            }
+        }
 
         if (tiempoRestante <= 0f) { Perder(); return; }
 

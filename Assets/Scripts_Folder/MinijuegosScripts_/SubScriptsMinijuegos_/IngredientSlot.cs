@@ -26,9 +26,6 @@ public class IngredientSlot : MonoBehaviour, IDropHandler
     {
         estaOcupado = false;
         img.color = colorLibre;
-
-        foreach (Transform hijo in transform)
-            Destroy(hijo.gameObject);
     }
 
     public void OnDrop(PointerEventData e)

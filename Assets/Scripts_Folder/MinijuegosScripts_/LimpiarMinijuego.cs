@@ -6,7 +6,7 @@ public class LimpiarMinijuego : MonoBehaviour
 {
     [Header("Referencias UI")]
     public Image manchaImagen;
-    public TextMeshProUGUI textoTemporizador;
+    public Slider barraTemporizador;
 
     [Header("Evento Buff — aparece 1 de cada 5 veces")]
     public GameObject panelBuff;
@@ -53,6 +53,12 @@ public class LimpiarMinijuego : MonoBehaviour
 
         tiempoRestante = tiempoMaximo + (eventoBuffActivo ? tiempoExtraConEvento : 0f);
 
+        if (barraTemporizador != null)
+        {
+            barraTemporizador.maxValue = tiempoRestante;
+            barraTemporizador.value = tiempoRestante;
+        }
+
         if (manchaImagen != null)
         {
             Color c = manchaImagen.color;
@@ -79,7 +85,22 @@ public class LimpiarMinijuego : MonoBehaviour
         if (!minijuegoActivo) return;
 
         tiempoRestante -= Time.unscaledDeltaTime;
-        textoTemporizador.text = Mathf.Max(0f, tiempoRestante).ToString("F1") + "s";
+
+        if (barraTemporizador != null)
+        {
+            barraTemporizador.value = tiempoRestante;
+
+            // NUEVO: Cambiar color de verde a rojo según el tiempo restante
+            if (barraTemporizador.fillRect != null)
+            {
+                Image fillImage = barraTemporizador.fillRect.GetComponent<Image>();
+                if (fillImage != null && barraTemporizador.maxValue > 0)
+                {
+                    float porcentaje = barraTemporizador.value / barraTemporizador.maxValue;
+                    fillImage.color = Color.Lerp(Color.red, Color.green, porcentaje);
+                }
+            }
+        }
 
         if (tiempoRestante <= 0f)
         {

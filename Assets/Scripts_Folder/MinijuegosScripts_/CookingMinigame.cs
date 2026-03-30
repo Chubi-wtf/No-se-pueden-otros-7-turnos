@@ -32,8 +32,8 @@ public class CookingMinigame : MonoBehaviour
     [Header("UI - Minijuego normal")]
     public TextMeshProUGUI textoOrden;
     public TextMeshProUGUI textoResultado;
-    public TextMeshProUGUI textoTemporizador;
-    public TextMeshProUGUI textoInstrucciones; // NUEVO: Para mostrar el tutorial
+    public Slider barraTemporizador;
+    public TextMeshProUGUI textoInstrucciones;
 
     [Header("Evento Nervios — aparece 1 de cada 5 veces")]
     [Tooltip("El GameObject VentanaJuego completo — es el que tiembla")]
@@ -156,7 +156,6 @@ public class CookingMinigame : MonoBehaviour
         }
     }
 
-
     void Update()
     {
         if (eventoNerviosActivo && !nerviosResueltos)
@@ -169,8 +168,20 @@ public class CookingMinigame : MonoBehaviour
 
         tiempoRestante -= Time.unscaledDeltaTime;
 
-        if (textoTemporizador != null)
-            textoTemporizador.text = Mathf.Max(0f, tiempoRestante).ToString("F1") + "s";
+        if (barraTemporizador != null)
+        {
+            barraTemporizador.value = tiempoRestante;
+
+            if (barraTemporizador.fillRect != null)
+            {
+                Image fillImage = barraTemporizador.fillRect.GetComponent<Image>();
+                if (fillImage != null && barraTemporizador.maxValue > 0)
+                {
+                    float porcentaje = barraTemporizador.value / barraTemporizador.maxValue;
+                    fillImage.color = Color.Lerp(Color.red, Color.green, porcentaje);
+                }
+            }
+        }
 
         if (tiempoRestante <= 0f)
         {
@@ -178,7 +189,6 @@ public class CookingMinigame : MonoBehaviour
             MostrarResultado("Tiempo agotado!", false);
         }
     }
-
 
     void UpdateNervios()
     {
@@ -279,8 +289,16 @@ public class CookingMinigame : MonoBehaviour
     {
         slotsBien = 0;
         terminado = false;
+
+        minijuegoNormalListo = true;
+
         tiempoRestante = tiempoMaximoBase + (conTiempoExtra ? tiempoExtraMinijuego : 0f);
 
+        if (barraTemporizador != null)
+        {
+            barraTemporizador.maxValue = tiempoRestante;
+            barraTemporizador.value = tiempoRestante;
+        }
 
         if (textoResultado != null) textoResultado.gameObject.SetActive(false);
 
@@ -301,6 +319,19 @@ public class CookingMinigame : MonoBehaviour
             slots[i].Resetear();
         }
 
+        foreach (var ing in ingredientes)
+        {
+            if (ing == null) continue;
+            ing.VolverAlPanel();
+            ing.ResetearEstado();
+        }
+
+        for (int i = 0; i < slots.Count; i++)
+        {
+            slots[i].ingredienteEsperado = i < secuenciaActual.Count ? secuenciaActual[i] : "";
+            slots[i].Resetear();
+        }
+
         List<string> pool = new List<string>(secuenciaActual);
         Mezclar(pool);
 
@@ -308,8 +339,7 @@ public class CookingMinigame : MonoBehaviour
         {
             DraggableIngredient ing = ingredientes[i];
 
-            if (panelIngredientes != null)
-                ing.transform.SetParent(panelIngredientes, false);
+            ing.VolverAlPanel();
 
             ing.ingredienteName = pool[i];
 
@@ -321,6 +351,7 @@ public class CookingMinigame : MonoBehaviour
                 img.enabled = true;
             }
 
+            ing.ResetearEstado();
             ing.gameObject.SetActive(true);
         }
     }
