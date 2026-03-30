@@ -18,7 +18,7 @@ public class IngredientSlot : MonoBehaviour, IDropHandler
     void Awake()
     {
         img = GetComponent<Image>();
-        img.raycastTarget = true;   
+        img.raycastTarget = true;
         img.color = colorLibre;
     }
 
@@ -43,6 +43,7 @@ public class IngredientSlot : MonoBehaviour, IDropHandler
             estaOcupado = true;
             img.color = colorCorrecto;
             ing.ColocarEnSlot(transform);
+            SonidoManager.Instance?.Acierto();
             CookingMinigame.Instance?.VerificarProgreso();
         }
         else
@@ -53,6 +54,7 @@ public class IngredientSlot : MonoBehaviour, IDropHandler
 
     IEnumerator FlashError(DraggableIngredient ing)
     {
+        SonidoManager.Instance?.Fallo();
         img.color = colorError;
         yield return new WaitForSecondsRealtime(0.35f);
         img.color = colorLibre;

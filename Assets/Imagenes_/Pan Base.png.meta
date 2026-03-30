@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 5dfc075b832342e41bab772eceb2a1e6
+guid: 18e9484e443a4c34f9eaa8a24966bf1d
 TextureImporter:
   internalIDToNameTable: []
   externalObjects: {}
@@ -97,13 +97,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: hambruguesa techo (1)_0
+      name: Pan Base_0
       rect:
         serializedVersion: 2
-        x: 1
+        x: 0
         y: 0
-        width: 292
-        height: 318
+        width: 347
+        height: 374
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -112,8 +112,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 885d90d5ed9b46c46a61f81aeb3512b5
-      internalID: 67792774
+      spriteID: eef439a2b4b6bbc479827593bcda6913
+      internalID: -574115555
       vertices: []
       indices: 
       edges: []
@@ -122,7 +122,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 878e7cf0c7fa91d44ac0e05c61fd722a
+    spriteID: 2d4d34b435c55d54fb02f306264eee1b
     internalID: 0
     vertices: []
     indices: 
@@ -132,7 +132,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      hambruguesa techo (1)_0: 67792774
+      Pan Base_0: -574115555
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

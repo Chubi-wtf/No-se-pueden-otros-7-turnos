@@ -60,7 +60,6 @@ public class TableController : MonoBehaviour
         exclamationMark.gameObject.SetActive(false);
         Debug.Log("El cliente se fue. ¡Penalización!");
 
-        // Ahora sí penaliza la sanidad
         if (SanidadManager.Instance != null)
         {
             SanidadManager.Instance.RecibirDañoMental();

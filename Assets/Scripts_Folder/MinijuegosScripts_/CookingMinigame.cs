@@ -33,69 +33,51 @@ public class CookingMinigame : MonoBehaviour
     public TextMeshProUGUI textoOrden;
     public TextMeshProUGUI textoResultado;
     public TextMeshProUGUI textoTemporizador;
+    public TextMeshProUGUI textoInstrucciones; // NUEVO: Para mostrar el tutorial
 
-    // ── Evento de nervios ─────────────────────────────────────────────────────
     [Header("Evento Nervios — aparece 1 de cada 5 veces")]
     [Tooltip("El GameObject VentanaJuego completo — es el que tiembla")]
     public RectTransform ventanaJuego;
-
     [Tooltip("Panel superpuesto con instrucción, contador y barra")]
     public GameObject panelNervios;
-
-    [Tooltip("Texto que dice 'INHALA' / 'Respira...' según el momento")]
+    [Tooltip("Texto que dice INHALA / instrucción")]
     public TextMeshProUGUI textoNervios;
-
     [Tooltip("Contador numérico que baja de 3.0 a 0.0")]
     public TextMeshProUGUI textoContador;
-
     [Tooltip("Barra de respiraciones completadas")]
     public Slider barraCalma;
-
     [Tooltip("Texto encima de la barra: 'Respiración 2/4'")]
     public TextMeshProUGUI textoBarraCalma;
 
     [Header("Ajustes del Evento Nervios")]
-    [Tooltip("Duración de cada ciclo (el contador baja de este valor a 0)")]
     public float duracionCiclo = 3f;
-
-    [Tooltip("Umbral al que aparece INHALA (ej: 1.0 = aparece cuando queda 1s)")]
     public float umbralInhala = 1.2f;
-
-    [Tooltip("Cuántas respiraciones correctas se necesitan para el buff")]
     public int respiracionesNecesarias = 4;
-
-    [Tooltip("Tiempo límite total del micro-evento antes de rendirse")]
     public float tiempoLimiteNervios = 20f;
-
-    [Tooltip("Segundos extra que se añaden al minijuego si hubo micro-evento")]
     public float tiempoExtraMinijuego = 3.5f;
-
-    [Tooltip("Segundos de inmunidad a pérdida de cordura si completa las respiraciones")]
     public float duracionBuff = 10f;
 
     [Header("Shake")]
     public float shakeMagnitud = 8f;
 
     [Header("Debug")]
-    [Tooltip("Actívalo desde DebugCommands (F5) para forzar el micro-evento")]
     public bool forzarEventoNervios = false;
 
     private Transform panelIngredientes;
     private List<string> secuenciaActual = new List<string>();
     private int slotsBien = 0;
     private bool terminado = false;
-    private float tiempoMaximoBase = 7f;   
+    private bool minijuegoNormalListo = false;
+    private float tiempoMaximoBase = 7f;
     private float tiempoRestante = 0f;
 
     private bool eventoNerviosActivo = false;
     private bool nerviosResueltos = false;
-    private bool buffGanadoEnNervios = false;
-
     private float tiempoRestanteNervios;
-    private float cicloTimer;              
+    private float cicloTimer;
     private int respiracionesOk = 0;
     private bool ventanaInhala = false;
-    private bool shiftUsadoEnCiclo = false; 
+    private bool shiftUsadoEnCiclo = false;
 
     private float shakeTimer = 0f;
     private Vector3 posOriginalVentana;
@@ -103,8 +85,19 @@ public class CookingMinigame : MonoBehaviour
 
     Sprite GetSprite(string nombre)
     {
+        if (string.IsNullOrEmpty(nombre)) return null;
+
         foreach (var e in spritePorNombre)
-            if (e.nombre == nombre) return e.sprite;
+        {
+            if (string.IsNullOrEmpty(e.nombre)) continue;
+
+            if (e.nombre.Trim().Equals(nombre.Trim(), System.StringComparison.OrdinalIgnoreCase))
+            {
+                return e.sprite;
+            }
+        }
+
+        Debug.LogError($"¡Ojo! No se encontró el sprite para: '{nombre}'. Revisa el Inspector.");
         return null;
     }
 
@@ -126,10 +119,13 @@ public class CookingMinigame : MonoBehaviour
 
     void OnEnable()
     {
+        minijuegoNormalListo = false;
+        terminado = false;
+        tiempoRestante = 0f;
+
         eventoNerviosActivo = forzarEventoNervios || (Random.Range(0, 5) == 0);
         forzarEventoNervios = false;
         nerviosResueltos = false;
-        buffGanadoEnNervios = false;
         respiracionesOk = 0;
         cicloTimer = duracionCiclo;
         ventanaInhala = false;
@@ -169,7 +165,7 @@ public class CookingMinigame : MonoBehaviour
             return;
         }
 
-        if (terminado || !gameObject.activeInHierarchy) return;
+        if (!minijuegoNormalListo || terminado || !gameObject.activeInHierarchy) return;
 
         tiempoRestante -= Time.unscaledDeltaTime;
 
@@ -181,7 +177,6 @@ public class CookingMinigame : MonoBehaviour
             terminado = true;
             MostrarResultado("Tiempo agotado!", false);
         }
-        if (PauseMenu.isPaused) return;
     }
 
 
@@ -220,11 +215,9 @@ public class CookingMinigame : MonoBehaviour
                 shiftUsadoEnCiclo = true;
                 respiracionesOk++;
 
-                if (barraCalma != null)
-                    barraCalma.value = respiracionesOk;
-
-                if (textoNervios != null)
-                    textoNervios.text = "<color=#00FF88>✓ Bien</color>";
+                if (barraCalma != null) barraCalma.value = respiracionesOk;
+                if (textoBarraCalma != null) textoBarraCalma.text = $"Respiración {respiracionesOk}/{respiracionesNecesarias}";
+                if (textoNervios != null) textoNervios.text = "<color=#00FF88>✓ Bien</color>";
 
                 if (respiracionesOk >= respiracionesNecesarias)
                 {
@@ -249,20 +242,14 @@ public class CookingMinigame : MonoBehaviour
 
     void RefrescarUI()
     {
-        if (textoNervios != null)
-            textoNervios.text = "¡La comanda te pone nervioso!\nEspera el <b>INHALA</b> y aprieta <b>Shift</b>";
-
-        if (textoContador != null)
-            textoContador.text = duracionCiclo.ToString("F1");
-
-        if (textoBarraCalma != null)
-            textoBarraCalma.text = $"Respiración {respiracionesOk}/{respiracionesNecesarias}";
+        if (textoNervios != null) textoNervios.text = "¡La comanda te pone nervioso!\nEspera el <b>INHALA</b> y aprieta <b>Shift</b>";
+        if (textoContador != null) textoContador.text = duracionCiclo.ToString("F1");
+        if (textoBarraCalma != null) textoBarraCalma.text = $"Respiración 0/{respiracionesNecesarias}";
     }
 
     void TerminarEventoNervios(bool buffGanado)
     {
         nerviosResueltos = true;
-        buffGanadoEnNervios = buffGanado;
 
         if (ventanaJuego != null)
             ventanaJuego.localPosition = posOriginalVentana;
@@ -294,7 +281,13 @@ public class CookingMinigame : MonoBehaviour
         terminado = false;
         tiempoRestante = tiempoMaximoBase + (conTiempoExtra ? tiempoExtraMinijuego : 0f);
 
+
         if (textoResultado != null) textoResultado.gameObject.SetActive(false);
+
+        if (textoInstrucciones != null)
+        {
+            textoInstrucciones.text = "Arrastra los ingredientes a los slots\nen el orden exacto de la secuencia.";
+        }
 
         int idx = Random.Range(0, secuenciasPosibles.Count);
         secuenciaActual = new List<string>(secuenciasPosibles[idx].ingredientes);
@@ -362,6 +355,16 @@ public class CookingMinigame : MonoBehaviour
             textoResultado.color = exito ? Color.green : Color.red;
             textoResultado.gameObject.SetActive(true);
         }
+
+        if (exito)
+        {
+            SonidoManager.Instance?.Acierto();
+        }
+        else
+        {
+            SonidoManager.Instance?.Fallo();
+        }
+
         StartCoroutine(CerrarConRetraso(exito));
     }
 
@@ -370,18 +373,18 @@ public class CookingMinigame : MonoBehaviour
         yield return new WaitForSecondsRealtime(1.5f);
         MinigameManager.Instance?.CerrarMinijuego(exito);
     }
-}
 
-[System.Serializable]
-public class Secuencia
-{
-    public string nombre;
-    public List<string> ingredientes;
-}
+    [System.Serializable]
+    public class Secuencia
+    {
+        public string nombre;
+        public List<string> ingredientes;
+    }
 
-[System.Serializable]
-public class SpriteEntry
-{
-    public string nombre;
-    public Sprite sprite;
+    [System.Serializable]
+    public class SpriteEntry
+    {
+        public string nombre;
+        public Sprite sprite;
+    }
 }

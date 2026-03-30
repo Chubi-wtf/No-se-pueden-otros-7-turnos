@@ -27,11 +27,17 @@ public class MinigameManager : MonoBehaviour
         panelActual = pantallaMinijuego;
         Time.timeScale = 0f;
         pantallaMinijuego.SetActive(true);
+
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
     }
 
     public void CerrarMinijuego(bool completado = false)
     {
         Time.timeScale = 1f;
+
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
 
         if (panelActual != null)
         {
@@ -41,12 +47,26 @@ public class MinigameManager : MonoBehaviour
 
         if (completado)
         {
-            SanidadManager.Instance?.RecuperarSanidad();   
+            SanidadManager.Instance?.RecuperarSanidad();
             RegistrarMinijuegoCompletado();
         }
         else
         {
-            SanidadManager.Instance?.RecibirDañoMental();  
+            SanidadManager.Instance?.RecibirDañoMental();
+        }
+    }
+
+    public void CerrarMinijuegoPausa()
+    {
+        Time.timeScale = 1f;
+
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
+
+        if (panelActual != null)
+        {
+            panelActual.SetActive(false);
+            panelActual = null;
         }
     }
 
@@ -70,6 +90,5 @@ public class MinigameManager : MonoBehaviour
     {
         Time.timeScale = 0f;
         Debug.Log("JUEGO COMPLETADO!");
-        
     }
 }

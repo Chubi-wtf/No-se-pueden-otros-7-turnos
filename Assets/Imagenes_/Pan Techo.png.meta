@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 18e9484e443a4c34f9eaa8a24966bf1d
+guid: 5dfc075b832342e41bab772eceb2a1e6
 TextureImporter:
   internalIDToNameTable: []
   externalObjects: {}
@@ -97,13 +97,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: hamburguesa_1339-1535 (1)_0
+      name: Pan Techo_0
       rect:
         serializedVersion: 2
         x: 1
-        y: 0
-        width: 346
-        height: 374
+        y: 15
+        width: 292
+        height: 297
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -112,8 +112,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: cfc4717b215b4a947b9209eeec32a072
-      internalID: -796756877
+      spriteID: 65c456861698bdd41a1ddca7f955ef1f
+      internalID: -1282677131
       vertices: []
       indices: 
       edges: []
@@ -122,7 +122,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 44efcd5400af4c04894abfad5b78359f
+    spriteID: ba51ba632c5831e4f9dc7a97bf986745
     internalID: 0
     vertices: []
     indices: 
@@ -132,7 +132,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      hamburguesa_1339-1535 (1)_0: -796756877
+      Pan Techo_0: -1282677131
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

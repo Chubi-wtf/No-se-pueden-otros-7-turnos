@@ -1,5 +1,5 @@
 using UnityEngine;
-using TMPro; // Importante para el texto de alta calidad
+using TMPro; 
 using UnityEngine.UI;
 
 public class NarrativeIntro : MonoBehaviour

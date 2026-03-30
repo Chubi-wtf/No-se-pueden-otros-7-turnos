@@ -101,6 +101,7 @@ public class LimpiarMinijuego : MonoBehaviour
             if (Input.GetKeyDown(KeyCode.Space))
             {
                 spacesPresionados = Mathf.Min(spacesPresionados + 1, spacePresionesParaBuff);
+                SonidoManager.Instance?.Acierto();
 
                 if (barraSpam != null)
                     barraSpam.value = spacesPresionados;
@@ -147,6 +148,7 @@ public class LimpiarMinijuego : MonoBehaviour
     void GanarMinijuego()
     {
         minijuegoActivo = false;
+        SonidoManager.Instance?.Acierto();
         if (panelBuff != null) panelBuff.SetActive(false);
         if (barraSpam != null) barraSpam.gameObject.SetActive(false);
         Debug.Log("Mesa limpia a tiempo!");
@@ -156,6 +158,7 @@ public class LimpiarMinijuego : MonoBehaviour
     void PerderMinijuego()
     {
         minijuegoActivo = false;
+        SonidoManager.Instance?.Fallo();
         if (panelBuff != null) panelBuff.SetActive(false);
         if (barraSpam != null) barraSpam.gameObject.SetActive(false);
         Debug.Log("Tiempo agotado!");

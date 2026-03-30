@@ -2,35 +2,49 @@ using UnityEngine;
 using UnityEngine.Events;
 using TMPro;
 
+public enum TipoMinijuego { Ninguno, Limpiar, Cocina, Cafe }
+
 public class ZonaInteractuable : MonoBehaviour
 {
-    [Header("Configuracion del Minijuego")]
+    [Header("Configuracion")]
+    public TipoMinijuego tipoMinijuego = TipoMinijuego.Ninguno;
     public string alertMessage = "Alerta!";
     public GameObject pantallaMinijuego;
     public UnityEvent onInteract;
 
-    [Header("Sistema de Tiempo")]
+    [Header("Tiempo")]
+    public float tiempoLimite = 15f;
+
+    [Header("Visuales")]
     public bool tareaActiva = false;
     public GameObject modeloVisual;
-    public float tiempoLimite = 15f;
-    private float tiempoRestante;
-
-    [Header("Icono de estado (SpriteRenderer)")]
     public SpriteRenderer iconoEstado;
     public Sprite spritebueno;
     public Sprite spriteMedio;
     public Sprite spriteMalo;
-
-    [Header("Icono decorativo del tipo de tarea")]
     public SpriteRenderer iconoTarea;
+
+    [HideInInspector] public string instruccionJuego = "";
+
+    private float tiempoRestante;
 
     void Start()
     {
-        if (modeloVisual != null && modeloVisual.name == "Bandeja")
-            Debug.LogError($"ZonaInteractuable en '{gameObject.name}' tiene 'Bandeja' en Modelo Visual!");
-
-        if (pantallaMinijuego != null && pantallaMinijuego.name == "Bandeja")
-            Debug.LogError($"ZonaInteractuable en '{gameObject.name}' tiene 'Bandeja' en Pantalla Minijuego!");
+        switch (tipoMinijuego)
+        {
+            case TipoMinijuego.Limpiar:
+                instruccionJuego = "Manten CLICK IZQUIERDO y mueve\nel mouse en todas direcciones.";
+                break;
+            case TipoMinijuego.Cocina:
+                instruccionJuego = "Arrastra los ingredientes a los slots\nen el orden exacto de la secuencia.";
+                break;
+            case TipoMinijuego.Cafe:
+                instruccionJuego = "Hay que hacer café! Sigue la secuencia de botones en pantalla";
+                break;
+            default:
+                instruccionJuego = "";
+                break;
+        }
 
         ApagarTarea();
     }
@@ -72,7 +86,6 @@ public class ZonaInteractuable : MonoBehaviour
     public void ApagarTarea()
     {
         tareaActiva = false;
-
         if (modeloVisual != null) modeloVisual.SetActive(false);
         if (iconoEstado != null) iconoEstado.gameObject.SetActive(false);
         if (iconoTarea != null) iconoTarea.gameObject.SetActive(false);
@@ -80,17 +93,17 @@ public class ZonaInteractuable : MonoBehaviour
 
     private void FallarTarea()
     {
-        Debug.Log("Tarea fallada!");
         ApagarTarea();
-        SanidadManager.Instance?.RecibirDa�oMental();
+        SanidadManager.Instance?.RecibirDañoMental();
+        Debug.Log($"Tarea fallada en {gameObject.name}");
     }
 
     public void Interact()
     {
         if (pantallaMinijuego != null)
-            MinigameManager.Instance.AbrirMinijuego(pantallaMinijuego);
+            MinigameManager.Instance?.AbrirMinijuego(pantallaMinijuego);
 
-        onInteract.Invoke();
+        onInteract?.Invoke();
         ApagarTarea();
     }
 }
