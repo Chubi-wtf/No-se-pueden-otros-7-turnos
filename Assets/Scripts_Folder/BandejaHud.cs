@@ -1,10 +1,12 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using UnityEngine.UI;
 
 public class BandejaHUD : MonoBehaviour
 {
     [Header("UI")]
     public Slider sliderBandeja;
+    public GameObject contenedorHUD;
+    public CanvasGroup canvasGroupHUD;
 
     [Header("Fisica")]
     public float gravedad = 0.9f;
@@ -12,17 +14,19 @@ public class BandejaHUD : MonoBehaviour
     public float umbralCaida = 1f;
 
     [Header("Penalizacion normal")]
-    public float dañoPorCaida = 10f;
+    public float daÃ±oPorCaida = 10f;
     public float tiempoEntrepenalizaciones = 3f;
 
     private float timerPenalizacion = 0f;
     private float balance = 0f;
+    private bool bandejaActiva = false;
     private bool modoEntrega = false;
 
     void Start()
     {
-        balance = Random.Range(-0.1f, 0.1f);
+        ReiniciarBalance();
         InicializarSlider();
+        MostrarHUD(false);
     }
 
     void InicializarSlider()
@@ -35,6 +39,8 @@ public class BandejaHUD : MonoBehaviour
 
     void Update()
     {
+        if (!bandejaActiva) return;
+
         float dir = Mathf.Sign(balance);
         if (balance == 0f) dir = Random.Range(0, 2) == 0 ? -1f : 1f;
 
@@ -52,13 +58,13 @@ public class BandejaHUD : MonoBehaviour
             if (timerPenalizacion <= 0f)
             {
                 timerPenalizacion = tiempoEntrepenalizaciones;
-                SanidadManager.Instance?.RecibirDañoPersonalizado(dañoPorCaida);
+                SanidadManager.Instance?.RecibirDaÃ±oPersonalizado(daÃ±oPorCaida);
                 balance = Random.Range(-0.15f, 0.15f);
 
                 if (modoEntrega)
                 {
-                    Debug.Log("Bandeja caída durante entrega — entrega cancelada.");
-                    EntregaBandeja.Instance?.CancelarEntrega();
+                    Debug.Log("Bandeja caÃ­da durante entrega â€” entrega cancelada.");
+                    EntregaBandeja.ObtenerInstancia()?.CancelarEntrega();
                     MinigameManager.Instance?.CerrarMinijuego(false);
                     modoEntrega = false;
                 }
@@ -72,12 +78,50 @@ public class BandejaHUD : MonoBehaviour
 
     public void ActivarModoEntrega()
     {
+        bandejaActiva = true;
         modoEntrega = true;
+        timerPenalizacion = 0f;
+        ReiniciarBalance();
+        InicializarSlider();
+        MostrarHUD(true);
         Debug.Log("Bandeja: modo entrega activado.");
     }
 
     public void DesactivarModoEntrega()
     {
+        bandejaActiva = false;
         modoEntrega = false;
+        timerPenalizacion = 0f;
+        MostrarHUD(false);
+    }
+
+    void ReiniciarBalance()
+    {
+        balance = Random.Range(-0.1f, 0.1f);
+    }
+
+    void MostrarHUD(bool visible)
+    {
+        if (canvasGroupHUD != null)
+        {
+            canvasGroupHUD.alpha = visible ? 1f : 0f;
+            canvasGroupHUD.interactable = visible;
+            canvasGroupHUD.blocksRaycasts = visible;
+            return;
+        }
+
+        if (contenedorHUD != null)
+        {
+            contenedorHUD.SetActive(visible);
+            return;
+        }
+
+        if (sliderBandeja == null) return;
+
+        sliderBandeja.enabled = visible;
+
+        Graphic[] graficos = sliderBandeja.GetComponentsInChildren<Graphic>(true);
+        foreach (Graphic grafico in graficos)
+            grafico.enabled = visible;
     }
 }

@@ -35,6 +35,9 @@ public class PlayerInteractuable : MonoBehaviour
     {
         if (zonaActual != null) return;
 
+        EntregaBandeja entrega = EntregaBandeja.ObtenerInstancia();
+        if (entrega != null && entrega.HayEntregaActiva) return;
+
         ZonaInteractuable zona = other.GetComponentInParent<ZonaInteractuable>();
         if (zona == null || !zona.tareaActiva) return;
 

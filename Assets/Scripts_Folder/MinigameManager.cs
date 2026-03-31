@@ -24,12 +24,22 @@ public class MinigameManager : MonoBehaviour
 
     public void AbrirMinijuego(GameObject pantallaMinijuego)
     {
+        if (pantallaMinijuego == null) return;
+
+        if (panelActual != null && panelActual != pantallaMinijuego)
+            panelActual.SetActive(false);
+
+        if (pantallaMinijuego.activeSelf)
+            pantallaMinijuego.SetActive(false);
+
         panelActual = pantallaMinijuego;
         Time.timeScale = 0f;
         pantallaMinijuego.SetActive(true);
 
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
+
+        Debug.Log($"MinigameManager: abriendo panel {pantallaMinijuego.name}");
     }
 
     public void CerrarMinijuego(bool completado = false)

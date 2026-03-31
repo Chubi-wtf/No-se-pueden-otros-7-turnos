@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using System.Collections;
@@ -10,12 +10,12 @@ public class MinijuegoCafe : MonoBehaviour
     public Slider barraTemporizador;
     public TextMeshProUGUI textoFase;
 
-    [Header("Fase 1 — Llenar el café")]
+    [Header("Fase 1 â€” Llenar el cafÃ©")]
     public GameObject panelFase1;
     public Slider sliderCafe;
     public TextMeshProUGUI textoInstrFase1;
 
-    [Header("Fase 2 — Secuencia")]
+    [Header("Fase 2 â€” Secuencia")]
     public GameObject panelFase2;
     public Image imagenCafe;
     public TextMeshProUGUI textoSecuencia;
@@ -79,7 +79,6 @@ public class MinijuegoCafe : MonoBehaviour
         {
             barraTemporizador.value = tiempoRestante;
 
-            // NUEVO: Cambiar color de verde a rojo según el tiempo restante
             if (barraTemporizador.fillRect != null)
             {
                 Image fillImage = barraTemporizador.fillRect.GetComponent<Image>();
@@ -156,8 +155,8 @@ public class MinijuegoCafe : MonoBehaviour
         if (panelFase2 != null) panelFase2.SetActive(f == Fase.Secuencia);
 
         if (textoFase != null)
-            textoFase.text = f == Fase.Cafe ? "Fase 1 / 2  —  Sirve el café"
-                                            : "Fase 2 / 2  —  Revuelve la crema";
+            textoFase.text = f == Fase.Cafe ? "Fase 1 / 2  â€”  Sirve el café"
+                                            : "Fase 2 / 2  â€”  Revuelve la crema";
 
         if (textoInstrFase1 != null)
             textoInstrFase1.text = "Mantén <b>SPACE</b> para llenar la taza.\n¡No se te derrame!";
@@ -185,10 +184,21 @@ public class MinijuegoCafe : MonoBehaviour
         if (faseActual == Fase.Terminado) return;
         faseActual = Fase.Terminado;
         minijuegoActivo = false;
-        Debug.Log("Café listo — iniciando entrega.");
+        Debug.Log("Cafe listo -> iniciando entrega.");
 
         SonidoManager.Instance?.Acierto();
-        MinigameManager.Instance?.CerrarMinijuego(true);
+
+        EntregaBandeja entrega = EntregaBandeja.ObtenerInstancia();
+        bool entregaIniciada = entrega != null &&
+                               entrega.IniciarEntrega("cafe");
+
+        if (entrega == null)
+            Debug.LogWarning("MinijuegoCafe: no se encontró EntregaBandeja en la escena.");
+
+        if (entregaIniciada)
+            MinigameManager.Instance?.CerrarMinijuegoPausa();
+        else
+            MinigameManager.Instance?.CerrarMinijuego(true);
     }
 
     void Perder()
@@ -196,7 +206,7 @@ public class MinijuegoCafe : MonoBehaviour
         if (faseActual == Fase.Terminado) return;
         faseActual = Fase.Terminado;
         minijuegoActivo = false;
-        Debug.Log("Tiempo agotado en el café.");
+        Debug.Log("Tiempo agotado en el cafÃ©.");
 
         SonidoManager.Instance?.Fallo();
         MinigameManager.Instance?.CerrarMinijuego(false);

@@ -402,7 +402,25 @@ public class CookingMinigame : MonoBehaviour
     IEnumerator CerrarConRetraso(bool exito)
     {
         yield return new WaitForSecondsRealtime(1.5f);
-        MinigameManager.Instance?.CerrarMinijuego(exito);
+
+        if (exito)
+        {
+            EntregaBandeja entrega = EntregaBandeja.ObtenerInstancia();
+            bool entregaIniciada = entrega != null &&
+                                   entrega.IniciarEntrega("hamburguesa");
+
+            if (entrega == null)
+                Debug.LogWarning("CookingMinigame: no se encontró EntregaBandeja en la escena.");
+
+            if (entregaIniciada)
+                MinigameManager.Instance?.CerrarMinijuegoPausa();
+            else
+                MinigameManager.Instance?.CerrarMinijuego(true);
+        }
+        else
+        {
+            MinigameManager.Instance?.CerrarMinijuego(false);
+        }
     }
 
     [System.Serializable]

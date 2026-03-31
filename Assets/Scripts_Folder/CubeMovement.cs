@@ -10,7 +10,6 @@ public class CubeMovement : MonoBehaviour
 
     private float multiplicadorBuff = 1f;
     private Coroutine rutinaBuff;
-
     private CharacterController cc;
 
     void Start()
@@ -20,24 +19,49 @@ public class CubeMovement : MonoBehaviour
 
     void Update()
     {
-        float h = 0f, v = 0f;
+        // Verificación simple al inicio
+        if (cc == null)
+        {
+            cc = GetComponent<CharacterController>();
+            if (cc == null) return;
+        }
 
-        if (Input.GetKey(KeyCode.A)) h = -1f;
-        if (Input.GetKey(KeyCode.D)) h = 1f;
-        if (Input.GetKey(KeyCode.W)) v = 1f;
-        if (Input.GetKey(KeyCode.S)) v = -1f;
+        // Si el CharacterController está desactivado, no hacer nada
+        if (!cc.enabled) return;
 
-        Vector3 dir = new Vector3(h, 0f, v).normalized;
-        float speed = Input.GetKey(KeyCode.LeftShift) ? velocidadCorrer : velocidadCaminar;
+        // Si el juego está pausado o Time.deltaTime es 0, no mover
+        if (Time.deltaTime <= 0f) return;
 
-        cc.Move(dir * speed * multiplicadorBuff * Time.deltaTime);
-        cc.Move(Vector3.down * 9.8f * Time.deltaTime);
+        // Leer inputs
+        float horizontal = 0f;
+        float vertical = 0f;
+
+        if (Input.GetKey(KeyCode.A)) horizontal = -1f;
+        if (Input.GetKey(KeyCode.D)) horizontal = 1f;
+        if (Input.GetKey(KeyCode.W)) vertical = 1f;
+        if (Input.GetKey(KeyCode.S)) vertical = -1f;
+
+        // Calcular dirección de movimiento
+        Vector3 direccion = new Vector3(horizontal, 0f, vertical).normalized;
+
+        // Determinar velocidad actual
+        float velocidadActual = Input.GetKey(KeyCode.LeftShift) ? velocidadCorrer : velocidadCaminar;
+
+        // Calcular movimiento final (incluyendo buff)
+        Vector3 movimiento = direccion * velocidadActual * multiplicadorBuff;
+
+        // Aplicar gravedad constante
+        movimiento.y = -9.81f;
+
+        // Aplicar el movimiento
+        cc.Move(movimiento * Time.deltaTime);
     }
 
-    
     public void AplicarBuff(float multiplicador, float duracion)
     {
-        if (rutinaBuff != null) StopCoroutine(rutinaBuff);
+        if (rutinaBuff != null)
+            StopCoroutine(rutinaBuff);
+
         rutinaBuff = StartCoroutine(RutinaBuff(multiplicador, duracion));
     }
 
