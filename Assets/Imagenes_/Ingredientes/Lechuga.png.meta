@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 5dfc075b832342e41bab772eceb2a1e6
+guid: 7ae6c738909544b4e8ee738fba09ec07
 TextureImporter:
   internalIDToNameTable: []
   externalObjects: {}
@@ -97,13 +97,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: Pan Techo_0
+      name: Lechuga_0
       rect:
         serializedVersion: 2
         x: 1
-        y: 15
-        width: 292
-        height: 297
+        y: 0
+        width: 255
+        height: 256
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -112,8 +112,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 65c456861698bdd41a1ddca7f955ef1f
-      internalID: -1282677131
+      spriteID: 69e8b25510af0854cbbcc62216afdf6a
+      internalID: -365760638
       vertices: []
       indices: 
       edges: []
@@ -122,7 +122,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: ba51ba632c5831e4f9dc7a97bf986745
+    spriteID: 5139fa7e4ab9fa24e8cf6d69d380c05f
     internalID: 0
     vertices: []
     indices: 
@@ -132,7 +132,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      Pan Techo_0: -1282677131
+      Lechuga_0: -365760638
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

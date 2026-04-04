@@ -49,11 +49,18 @@ public class MinijuegoServirPEDIDO : MonoBehaviour
     private float progresoDescenso = 0f;
     private float progresoTiming = 0f;
     private bool terminado = false;
+    private Quaternion rotacionInicialBandeja = Quaternion.identity;
+    private bool bandejaInicialGuardada = false;
 
     void Awake()
     {
         if (imagenBandeja != null)
+        {
             rectBandeja = imagenBandeja.rectTransform;
+            posicionInicial = rectBandeja.anchoredPosition;
+            rotacionInicialBandeja = rectBandeja.localRotation;
+            bandejaInicialGuardada = true;
+        }
     }
 
     void OnEnable()
@@ -64,6 +71,7 @@ public class MinijuegoServirPEDIDO : MonoBehaviour
 
     void OnDisable()
     {
+        RestaurarTransformBandeja();
         MostrarPanel(false);
     }
 
@@ -92,9 +100,15 @@ public class MinijuegoServirPEDIDO : MonoBehaviour
 
         if (rectBandeja != null)
         {
-            posicionInicial = rectBandeja.anchoredPosition;
+            if (!bandejaInicialGuardada)
+            {
+                posicionInicial = rectBandeja.anchoredPosition;
+                rotacionInicialBandeja = rectBandeja.localRotation;
+                bandejaInicialGuardada = true;
+            }
+
             rectBandeja.anchoredPosition = posicionInicial;
-            rectBandeja.localRotation = Quaternion.identity;
+            rectBandeja.localRotation = rotacionInicialBandeja;
         }
 
         if (sliderDescenso != null)
@@ -267,6 +281,7 @@ public class MinijuegoServirPEDIDO : MonoBehaviour
     System.Collections.IEnumerator CerrarConResultado(bool exito)
     {
         yield return new WaitForSecondsRealtime(retrasoCierre);
+        RestaurarTransformBandeja();
         MostrarPanel(false);
 
         EntregaBandeja entrega = EntregaBandeja.ObtenerInstancia();
@@ -287,5 +302,15 @@ public class MinijuegoServirPEDIDO : MonoBehaviour
     {
         if (panelMinijuego != null)
             panelMinijuego.SetActive(visible);
+    }
+
+    void RestaurarTransformBandeja()
+    {
+        if (rectBandeja == null || !bandejaInicialGuardada) return;
+
+        rectBandeja.anchoredPosition = posicionInicial;
+        rectBandeja.localRotation = rotacionInicialBandeja;
+        progresoDescenso = 0f;
+        progresoTiming = 0f;
     }
 }

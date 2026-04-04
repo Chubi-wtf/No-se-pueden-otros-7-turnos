@@ -1,21 +1,27 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using System.Collections;
 using System.Collections.Generic;
+using Behaviour = UnityEngine.Behaviour;
 
 public class MinijuegoCafe : MonoBehaviour
 {
     [Header("Compartido")]
     public Slider barraTemporizador;
     public TextMeshProUGUI textoFase;
+    public Transform puntoCamaraMinijuego;
+    public Behaviour controladorVistaJugador;
 
-    [Header("Fase 1 â€” Llenar el cafÃ©")]
+    [Header("Fase 1 - Llenar el cafe")]
     public GameObject panelFase1;
     public Slider sliderCafe;
     public TextMeshProUGUI textoInstrFase1;
+    public Transform objetoVertido;
+    public GameObject prefabLiquidoCafe;
+    public Transform puntoSalidaLiquido;
 
-    [Header("Fase 2 â€” Secuencia")]
+    [Header("Fase 2 - Secuencia")]
     public GameObject panelFase2;
     public Image imagenCafe;
     public TextMeshProUGUI textoSecuencia;
@@ -24,6 +30,12 @@ public class MinijuegoCafe : MonoBehaviour
     [Header("Ajustes Fase 1")]
     public float velocidadLlenado = 0.9f;
     public float velocidadVaciado = 0.4f;
+    public float velocidadInclinacion = 1.75f;
+    public float anguloMaximoInclinacion = 75f;
+    [Range(0f, 1f)] public float porcentajeInicioVertido = 0.7f;
+    public float intervaloLiquido = 0.06f;
+    public float vidaLiquido = 2f;
+    public float fuerzaInicialLiquido = 1.5f;
 
     [Header("Ajustes Fase 2")]
     public Sprite[] posiblesCafes;
@@ -32,12 +44,28 @@ public class MinijuegoCafe : MonoBehaviour
     [Header("Tiempo total")]
     public float tiempoMaximo = 10f;
 
-    private enum Fase { Cafe, Secuencia, Terminado }
-    private Fase faseActual;
+    private enum Fase
+    {
+        Cafe,
+        Secuencia,
+        Terminado
+    }
 
+    private Fase faseActual;
     private float nivelCafe = 0f;
+    private float inclinacionActual = 0f;
     private float tiempoRestante = 0f;
     private bool minijuegoActivo = false;
+    private float timerLiquido = 0f;
+    private Quaternion rotacionBaseVertido = Quaternion.identity;
+    private Camera camaraPrincipal;
+    private Vector3 posicionOriginalCamara;
+    private Quaternion rotacionOriginalCamara;
+    private bool restaurarCamaraPendiente = false;
+    private bool controladorVistaOriginalActivo = false;
+    private List<Transform> cubosLiquido = new List<Transform>();
+    private Vector3 posicionLocalOriginalVertido = Vector3.zero;
+    private bool vertidoOriginalGuardado = false;
 
     private readonly KeyCode[] teclasPermitidas =
         { KeyCode.A, KeyCode.S, KeyCode.D, KeyCode.W, KeyCode.Q, KeyCode.E, KeyCode.F };
@@ -46,12 +74,18 @@ public class MinijuegoCafe : MonoBehaviour
 
     void OnEnable()
     {
+        PrepararCamaraMinijuego();
+
         tiempoRestante = tiempoMaximo;
         nivelCafe = 0f;
+        inclinacionActual = 0f;
+        timerLiquido = 0f;
         indiceActual = 0;
         minijuegoActivo = true;
         faseActual = Fase.Cafe;
         secuenciaActual.Clear();
+        cubosLiquido.Clear();
+
         for (int i = 0; i < longitudSecuencia; i++)
             secuenciaActual.Add(teclasPermitidas[Random.Range(0, teclasPermitidas.Length)]);
 
@@ -63,14 +97,52 @@ public class MinijuegoCafe : MonoBehaviour
 
         if (posiblesCafes != null && posiblesCafes.Length > 0 && imagenCafe != null)
             imagenCafe.sprite = posiblesCafes[Random.Range(0, posiblesCafes.Length)];
-        if (sliderCafe != null) { sliderCafe.minValue = 0f; sliderCafe.maxValue = 1f; sliderCafe.value = 0f; }
+
+        if (sliderCafe != null)
+        {
+            sliderCafe.minValue = 0f;
+            sliderCafe.maxValue = 1f;
+            sliderCafe.value = 0f;
+        }
+
+        if (objetoVertido != null)
+        {
+            if (!vertidoOriginalGuardado)
+            {
+                posicionLocalOriginalVertido = objetoVertido.localPosition;
+                rotacionBaseVertido = objetoVertido.localRotation;
+                vertidoOriginalGuardado = true;
+            }
+
+            objetoVertido.localPosition = posicionLocalOriginalVertido;
+            rotacionBaseVertido = objetoVertido.localRotation;
+            objetoVertido.localRotation = rotacionBaseVertido;
+        }
 
         MostrarFase(Fase.Cafe);
         ActualizarSecuencia();
     }
 
+    void OnDisable()
+    {
+        RestaurarObjetoVertido();
+        RestaurarCamaraJugador();
+    }
+
     void Update()
     {
+        for (int i = cubosLiquido.Count - 1; i >= 0; i--)
+        {
+            if (cubosLiquido[i] == null)
+            {
+                cubosLiquido.RemoveAt(i);
+            }
+            else
+            {
+                cubosLiquido[i].position += (Vector3.down + puntoSalidaLiquido.forward * 0.5f) * fuerzaInicialLiquido * Time.unscaledDeltaTime;
+            }
+        }
+
         if (!minijuegoActivo || faseActual == Fase.Terminado) return;
 
         tiempoRestante -= Time.unscaledDeltaTime;
@@ -90,7 +162,11 @@ public class MinijuegoCafe : MonoBehaviour
             }
         }
 
-        if (tiempoRestante <= 0f) { Perder(); return; }
+        if (tiempoRestante <= 0f)
+        {
+            Perder();
+            return;
+        }
 
         if (faseActual == Fase.Cafe) UpdateFase1();
         else if (faseActual == Fase.Secuencia) UpdateFase2();
@@ -99,18 +175,41 @@ public class MinijuegoCafe : MonoBehaviour
     void UpdateFase1()
     {
         if (Input.GetKey(KeyCode.Space))
-            nivelCafe += velocidadLlenado * Time.unscaledDeltaTime;
+            inclinacionActual += velocidadInclinacion * Time.unscaledDeltaTime;
         else
+            inclinacionActual -= velocidadInclinacion * Time.unscaledDeltaTime;
+
+        inclinacionActual = Mathf.Clamp01(inclinacionActual);
+
+        bool estaVertiendo = Input.GetKey(KeyCode.Space) && inclinacionActual >= porcentajeInicioVertido;
+
+        if (estaVertiendo)
+        {
+            nivelCafe += velocidadLlenado * Time.unscaledDeltaTime;
+            ActualizarLiquidoVisual();
+        }
+        else
+        {
             nivelCafe -= velocidadVaciado * Time.unscaledDeltaTime;
+            timerLiquido = 0f;
+        }
 
         nivelCafe = Mathf.Clamp01(nivelCafe);
-        if (sliderCafe != null) sliderCafe.value = nivelCafe;
+
+        if (sliderCafe != null)
+            sliderCafe.value = nivelCafe;
 
         if (sliderCafe != null)
         {
-            var fill = sliderCafe.fillRect?.GetComponent<Image>();
+            Image fill = sliderCafe.fillRect?.GetComponent<Image>();
             if (fill != null)
                 fill.color = Color.Lerp(Color.white, new Color(0.6f, 0.3f, 0.1f), nivelCafe);
+        }
+
+        if (objetoVertido != null)
+        {
+            float anguloActual = Mathf.Lerp(0f, anguloMaximoInclinacion, inclinacionActual);
+            objetoVertido.localRotation = rotacionBaseVertido * Quaternion.Euler(0f, 0f, -anguloActual);
         }
 
         if (nivelCafe >= 1f)
@@ -155,11 +254,11 @@ public class MinijuegoCafe : MonoBehaviour
         if (panelFase2 != null) panelFase2.SetActive(f == Fase.Secuencia);
 
         if (textoFase != null)
-            textoFase.text = f == Fase.Cafe ? "Fase 1 / 2  â€”  Sirve el café"
-                                            : "Fase 2 / 2  â€”  Revuelve la crema";
+            textoFase.text = f == Fase.Cafe ? "Fase 1 / 2 - Sirve el cafe"
+                                            : "Fase 2 / 2 - Revuelve la crema";
 
         if (textoInstrFase1 != null)
-            textoInstrFase1.text = "Mantén <b>SPACE</b> para llenar la taza.\n¡No se te derrame!";
+            textoInstrFase1.text = "Mantén <b>SPACE</b> para inclinar y servir.\nAl pasar el 70% comenzará a caer el café.";
 
         if (textoInstrFase2 != null)
             textoInstrFase2.text = "Sigue la secuencia de teclas:\n<b>W A S D Q E F</b>";
@@ -168,6 +267,7 @@ public class MinijuegoCafe : MonoBehaviour
     void ActualizarSecuencia()
     {
         if (textoSecuencia == null) return;
+
         string txt = "";
         for (int i = 0; i < secuenciaActual.Count; i++)
         {
@@ -176,21 +276,24 @@ public class MinijuegoCafe : MonoBehaviour
             else if (i == indiceActual) txt += $"<color=#FFFF00>{n}</color> ";
             else txt += $"<color=#FFFFFF>{n}</color> ";
         }
+
         textoSecuencia.text = txt;
     }
 
     void Ganar()
     {
         if (faseActual == Fase.Terminado) return;
+
         faseActual = Fase.Terminado;
         minijuegoActivo = false;
         Debug.Log("Cafe listo -> iniciando entrega.");
 
         SonidoManager.Instance?.Acierto();
+        RestaurarObjetoVertido();
+        RestaurarCamaraJugador();
 
         EntregaBandeja entrega = EntregaBandeja.ObtenerInstancia();
-        bool entregaIniciada = entrega != null &&
-                               entrega.IniciarEntrega("cafe");
+        bool entregaIniciada = entrega != null && entrega.IniciarEntrega("cafe");
 
         if (entrega == null)
             Debug.LogWarning("MinijuegoCafe: no se encontró EntregaBandeja en la escena.");
@@ -204,11 +307,80 @@ public class MinijuegoCafe : MonoBehaviour
     void Perder()
     {
         if (faseActual == Fase.Terminado) return;
+
         faseActual = Fase.Terminado;
         minijuegoActivo = false;
-        Debug.Log("Tiempo agotado en el cafÃ©.");
+        Debug.Log("Tiempo agotado en el cafe.");
+        RestaurarObjetoVertido();
+        RestaurarCamaraJugador();
 
         SonidoManager.Instance?.Fallo();
         MinigameManager.Instance?.CerrarMinijuego(false);
+    }
+
+    void ActualizarLiquidoVisual()
+    {
+        if (prefabLiquidoCafe == null || puntoSalidaLiquido == null) return;
+
+        timerLiquido -= Time.unscaledDeltaTime;
+        if (timerLiquido > 0f) return;
+
+        timerLiquido = intervaloLiquido;
+
+        GameObject liquido = Instantiate(
+            prefabLiquidoCafe,
+            puntoSalidaLiquido.position,
+            puntoSalidaLiquido.rotation);
+
+        cubosLiquido.Add(liquido.transform);
+        Destroy(liquido, vidaLiquido);
+    }
+
+    void PrepararCamaraMinijuego()
+    {
+        camaraPrincipal = Camera.main;
+        if (camaraPrincipal == null) return;
+
+        posicionOriginalCamara = camaraPrincipal.transform.position;
+        rotacionOriginalCamara = camaraPrincipal.transform.rotation;
+        restaurarCamaraPendiente = true;
+
+        if (controladorVistaJugador != null)
+        {
+            controladorVistaOriginalActivo = controladorVistaJugador.enabled;
+            controladorVistaJugador.enabled = false;
+        }
+
+        if (puntoCamaraMinijuego != null)
+        {
+            camaraPrincipal.transform.SetPositionAndRotation(
+                puntoCamaraMinijuego.position,
+                puntoCamaraMinijuego.rotation);
+        }
+    }
+
+    void RestaurarCamaraJugador()
+    {
+        if (!restaurarCamaraPendiente) return;
+
+        if (camaraPrincipal == null)
+            camaraPrincipal = Camera.main;
+
+        if (camaraPrincipal != null)
+            camaraPrincipal.transform.SetPositionAndRotation(posicionOriginalCamara, rotacionOriginalCamara);
+
+        if (controladorVistaJugador != null)
+            controladorVistaJugador.enabled = controladorVistaOriginalActivo;
+
+        restaurarCamaraPendiente = false;
+    }
+
+    void RestaurarObjetoVertido()
+    {
+        if (objetoVertido == null || !vertidoOriginalGuardado) return;
+
+        objetoVertido.localPosition = posicionLocalOriginalVertido;
+        objetoVertido.localRotation = rotacionBaseVertido;
+        inclinacionActual = 0f;
     }
 }
