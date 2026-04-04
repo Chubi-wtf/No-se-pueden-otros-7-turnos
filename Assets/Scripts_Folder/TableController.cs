@@ -1,18 +1,21 @@
-﻿using UnityEngine;
+using UnityEngine;
 using TMPro;
 
 public class TableController : MonoBehaviour
 {
-    [Header("Indicador 3D (objeto en la escena, no UI)")]
-    [Tooltip("Arrastra aquí el GameObject con el componente TextMeshPro (3D, no UGUI)")]
-    public TextMeshPro exclamationMark;     
+    [Header("Indicador 3D")]
+    [Tooltip("Arrastra aqui el GameObject con el componente TextMeshPro 3D")]
+    public TextMeshPro exclamationMark;
+
+    [Header("Entrega")]
+    public SphereCollider colliderEntrega;
 
     [Header("Ajustes de Tiempo")]
     public float maxWaitTime = 15f;
     private float timeRemaining;
     public bool isWaitingForFood = false;
 
-    [Header("Colores de Estrés")]
+    [Header("Colores de Estres")]
     public Color colorGood = Color.green;
     public Color colorWarning = Color.yellow;
     public Color colorCritical = Color.red;
@@ -59,8 +62,6 @@ public class TableController : MonoBehaviour
 
         if (exclamationMark != null)
             exclamationMark.gameObject.SetActive(false);
-
-        Debug.Log("¡Pedido entregado!");
     }
 
     public void CancelOrder(bool penalizar = false)
@@ -71,7 +72,7 @@ public class TableController : MonoBehaviour
             exclamationMark.gameObject.SetActive(false);
 
         if (penalizar)
-            SanidadManager.Instance?.RecibirDañoMental();
+            SanidadManager.Instance?.RecibirDanioMental();
     }
 
     private void FailOrder()
@@ -81,7 +82,23 @@ public class TableController : MonoBehaviour
         if (exclamationMark != null)
             exclamationMark.gameObject.SetActive(false);
 
-        Debug.Log("El cliente se fue. ¡Penalización!");
-        SanidadManager.Instance?.RecibirDañoMental();
+        SanidadManager.Instance?.RecibirDanioMental();
+    }
+
+    public SphereCollider ObtenerColliderEntrega()
+    {
+        if (colliderEntrega != null)
+            return colliderEntrega;
+
+        colliderEntrega = GetComponent<SphereCollider>();
+        if (colliderEntrega != null)
+            return colliderEntrega;
+
+        colliderEntrega = GetComponentInChildren<SphereCollider>(true);
+        if (colliderEntrega != null)
+            return colliderEntrega;
+
+        colliderEntrega = GetComponentInParent<SphereCollider>();
+        return colliderEntrega;
     }
 }

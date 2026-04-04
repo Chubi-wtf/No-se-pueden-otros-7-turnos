@@ -63,7 +63,6 @@ public class BandejaHUD : MonoBehaviour
 
                 if (modoEntrega)
                 {
-                    Debug.Log("Bandeja caída durante entrega — entrega cancelada.");
                     EntregaBandeja.ObtenerInstancia()?.CancelarEntrega();
                     MinigameManager.Instance?.CerrarMinijuego(false);
                     modoEntrega = false;
@@ -84,7 +83,6 @@ public class BandejaHUD : MonoBehaviour
         ReiniciarBalance();
         InicializarSlider();
         MostrarHUD(true);
-        Debug.Log("Bandeja: modo entrega activado.");
     }
 
     public void DesactivarModoEntrega()

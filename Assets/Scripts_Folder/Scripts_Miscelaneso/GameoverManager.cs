@@ -36,8 +36,6 @@ public class GameoverManager : MonoBehaviour
         if (textoSubtitulo != null) textoSubtitulo.text = "No pudiste aguantar el turno, ERES UN MAL EMPLEADO.";
 
         if (panelGameOver != null) panelGameOver.SetActive(true);
-
-        Debug.Log("GAME OVER activado.");
     }
 
     public void Reintentar()

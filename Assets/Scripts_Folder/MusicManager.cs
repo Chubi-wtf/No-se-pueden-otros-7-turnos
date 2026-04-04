@@ -9,14 +9,19 @@ public class MusicaManager : MonoBehaviour
     public AudioClip musicaJuego;
 
     [Header("Pitch segun cordura")]
-    public float pitchMaximo = 1.0f;   
-    public float pitchMinimo = 0.6f;   
+    public float pitchMaximo = 1.0f;
+    public float pitchMinimo = 0.6f;
+
+    [Header("Pitch adicional por turno")]
+    public float pitchExtraMinimoTurno = 0f;
+    public float pitchExtraMaximoTurno = 0.3f;
 
     [Header("Velocidad de transicion del pitch")]
-    public float velocidadPitch = 2f;   
+    public float velocidadPitch = 2f;
 
     private AudioSource audioSource;
-    private float pitchObjetivo;
+    private float pitchBaseCordura;
+    private float pitchExtraTurno;
 
     void Awake()
     {
@@ -33,7 +38,9 @@ public class MusicaManager : MonoBehaviour
         audioSource.clip = musicaJuego;
         audioSource.loop = true;
         audioSource.playOnAwake = false;
-        pitchObjetivo = pitchMaximo;
+
+        pitchBaseCordura = pitchMaximo;
+        pitchExtraTurno = 0f;
     }
 
     void Start()
@@ -44,12 +51,24 @@ public class MusicaManager : MonoBehaviour
 
     void Update()
     {
+        float pitchObjetivo = Mathf.Clamp(
+            pitchBaseCordura + pitchExtraTurno,
+            pitchMinimo,
+            pitchMaximo + pitchExtraMaximoTurno);
+
         audioSource.pitch = Mathf.Lerp(audioSource.pitch, pitchObjetivo, velocidadPitch * Time.deltaTime);
     }
 
-    
     public void ActualizarPitch(float porcentajeCordura)
     {
-        pitchObjetivo = Mathf.Lerp(pitchMinimo, pitchMaximo, porcentajeCordura);
+        pitchBaseCordura = Mathf.Lerp(pitchMinimo, pitchMaximo, porcentajeCordura);
+    }
+
+    public void ActualizarProgresoTurno(float progreso)
+    {
+        pitchExtraTurno = Mathf.Lerp(
+            pitchExtraMinimoTurno,
+            pitchExtraMaximoTurno,
+            Mathf.Clamp01(progreso));
     }
 }

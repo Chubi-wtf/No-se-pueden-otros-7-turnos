@@ -30,6 +30,7 @@ public class MinijuegoServirPEDIDO : MonoBehaviour
     public float gravedadBalance = 0.9f;
     public float correccionBalance = 2f;
     public float umbralCaida = 1f;
+    public float danoCorduraPorCaida = 35f;
 
     [Header("Timing de bajada")]
     public int aciertosNecesarios = 5;
@@ -161,7 +162,7 @@ public class MinijuegoServirPEDIDO : MonoBehaviour
         balanceActual = Mathf.Clamp(balanceActual, -1f, 1f);
 
         if (Mathf.Abs(balanceActual) >= umbralCaida)
-            Fallar("La bandeja se inclino demasiado.");
+            FallarPorBalanceExtremo();
     }
 
     void ActualizarTiming()
@@ -276,6 +277,12 @@ public class MinijuegoServirPEDIDO : MonoBehaviour
 
         SonidoManager.Instance?.Fallo();
         StartCoroutine(CerrarConResultado(false));
+    }
+
+    void FallarPorBalanceExtremo()
+    {
+        SanidadManager.Instance?.RecibirDanioPersonalizado(danoCorduraPorCaida);
+        Fallar($"La bandeja llego a su limite y perdiste {danoCorduraPorCaida:0} de cordura.");
     }
 
     System.Collections.IEnumerator CerrarConResultado(bool exito)

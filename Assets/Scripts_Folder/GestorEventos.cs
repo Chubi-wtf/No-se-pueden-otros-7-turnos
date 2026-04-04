@@ -6,7 +6,7 @@ public class GestorEventos : MonoBehaviour
     [Header("Todas las tareas del nivel")]
     public ZonaInteractuable[] todasLasZonas; 
 
-    [Header("Ritmo de Aparición")]
+    [Header("Ritmo de Apariciï¿½n")]
     public float tiempoMinimoSpawn = 4f;
     public float tiempoMaximoSpawn = 8f;
 
@@ -45,7 +45,6 @@ public class GestorEventos : MonoBehaviour
         {
             int indice = Random.Range(0, zonasDisponibles.Count);
             zonasDisponibles[indice].ActivarTarea();
-            Debug.Log("¡Nuevo evento en: " + zonasDisponibles[indice].gameObject.name + "!");
         }
     }
 }

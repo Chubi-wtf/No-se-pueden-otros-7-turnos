@@ -58,7 +58,5 @@ public class NarrativeIntro : MonoBehaviour
       
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
-
-        Debug.Log("¡A trabajar, mesero agobiado!");
     }
 }

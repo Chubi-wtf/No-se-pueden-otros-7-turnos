@@ -95,7 +95,6 @@ public class ZonaInteractuable : MonoBehaviour
     {
         ApagarTarea();
         SanidadManager.Instance?.RecibirDañoMental();
-        Debug.Log($"Tarea fallada en {gameObject.name}");
     }
 
     public void Interact()

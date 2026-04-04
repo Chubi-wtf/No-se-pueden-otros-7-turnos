@@ -76,7 +76,10 @@ public class MinijuegoCafe : MonoBehaviour
     {
         PrepararCamaraMinijuego();
 
-        tiempoRestante = tiempoMaximo;
+        float multiplicadorTiempo = MinigameManager.Instance != null
+            ? MinigameManager.Instance.ObtenerMultiplicadorTiempoTurnoActual()
+            : 1f;
+        tiempoRestante = tiempoMaximo * multiplicadorTiempo;
         nivelCafe = 0f;
         inclinacionActual = 0f;
         timerLiquido = 0f;
@@ -91,7 +94,7 @@ public class MinijuegoCafe : MonoBehaviour
 
         if (barraTemporizador != null)
         {
-            barraTemporizador.maxValue = tiempoMaximo;
+            barraTemporizador.maxValue = tiempoRestante;
             barraTemporizador.value = tiempoRestante;
         }
 
@@ -286,7 +289,6 @@ public class MinijuegoCafe : MonoBehaviour
 
         faseActual = Fase.Terminado;
         minijuegoActivo = false;
-        Debug.Log("Cafe listo -> iniciando entrega.");
 
         SonidoManager.Instance?.Acierto();
         RestaurarObjetoVertido();
@@ -310,7 +312,6 @@ public class MinijuegoCafe : MonoBehaviour
 
         faseActual = Fase.Terminado;
         minijuegoActivo = false;
-        Debug.Log("Tiempo agotado en el cafe.");
         RestaurarObjetoVertido();
         RestaurarCamaraJugador();
 

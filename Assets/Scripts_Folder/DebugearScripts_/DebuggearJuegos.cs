@@ -3,6 +3,8 @@ using UnityEngine.SceneManagement;
 
 public class DebuggearJuegos : MonoBehaviour
 {
+    public static DebuggearJuegos Instance;
+
     [Header("Activacion")]
     public bool debugActivo = true;
     public KeyCode teclaToggleDebug = KeyCode.F9;
@@ -38,6 +40,26 @@ public class DebuggearJuegos : MonoBehaviour
     public float tiempoParaReiniciar = 3f;
     public KeyCode teclaReinicio = KeyCode.R;
     private float timerReinicio = 0f;
+
+    void Awake()
+    {
+        Instance = this;
+    }
+
+    public static DebuggearJuegos ObtenerInstancia()
+    {
+        if (Instance != null)
+            return Instance;
+
+        DebuggearJuegos[] debugs = FindObjectsByType<DebuggearJuegos>(
+            FindObjectsInactive.Include,
+            FindObjectsSortMode.None);
+
+        if (debugs.Length > 0)
+            Instance = debugs[0];
+
+        return Instance;
+    }
 
     void Start()
     {
@@ -113,6 +135,33 @@ public class DebuggearJuegos : MonoBehaviour
         AbrirPanel(panelServirPedido, "Servir Pedido");
     }
 
+    public bool AbrirServirPedidoDesdeEntrega(
+        MinijuegoServirPEDIDO minijuegoServirPedido,
+        string pedido,
+        string mesa)
+    {
+        GameObject panelObjetivo = ObtenerPanelRaiz(panelServirPedido);
+
+        if (panelObjetivo == null && minijuegoServirPedido != null)
+            panelObjetivo = ObtenerPanelRaiz(minijuegoServirPedido.gameObject);
+
+        if (panelObjetivo == null)
+        {
+            Debug.LogWarning("DebuggearJuegos: no hay panel asignado para Servir Pedido desde entrega.");
+            return false;
+        }
+
+        if (minijuegoServirPedido != null)
+        {
+            if (minijuegoServirPedido.panelMinijuego == null)
+                minijuegoServirPedido.panelMinijuego = panelObjetivo;
+            minijuegoServirPedido.PrepararEntrega(pedido, mesa);
+        }
+
+        bool abierto = AbrirPanel(panelObjetivo, "Servir Pedido");
+        return abierto;
+    }
+
     public void ActivarTodasLasZonas()
     {
         ZonaInteractuable[] zonas = FindObjectsByType<ZonaInteractuable>(FindObjectsSortMode.None);
@@ -122,7 +171,6 @@ public class DebuggearJuegos : MonoBehaviour
                 zona.ActivarTarea();
         }
 
-        Debug.Log($"Debug -> zonas activadas: {zonas.Length}");
     }
 
     public void ForzarEntrega()
@@ -135,25 +183,36 @@ public class DebuggearJuegos : MonoBehaviour
         }
 
         bool ok = entrega.IniciarEntrega("debug");
-        Debug.Log(ok ? "Debug -> entrega forzada." : "Debug -> no se pudo forzar la entrega.");
     }
 
-    void AbrirPanel(GameObject panel, string nombre)
+    bool AbrirPanel(GameObject panel, string nombre)
     {
         if (panel == null)
         {
             Debug.LogWarning($"DebuggearJuegos: no hay panel asignado para {nombre}.");
-            return;
+            return false;
         }
 
         if (MinigameManager.Instance == null)
         {
             Debug.LogWarning("DebuggearJuegos: no existe MinigameManager en la escena.");
-            return;
+            return false;
         }
 
         MinigameManager.Instance.AbrirMinijuego(panel);
-        Debug.Log($"Debug -> abriendo minijuego: {nombre}");
+        return true;
+    }
+
+    GameObject ObtenerPanelRaiz(GameObject panel)
+    {
+        if (panel == null)
+            return null;
+
+        Canvas canvas = panel.GetComponentInParent<Canvas>(true);
+        if (canvas != null)
+            return canvas.gameObject;
+
+        return panel;
     }
 
     void ReiniciarEscena()

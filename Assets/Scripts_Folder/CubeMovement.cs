@@ -68,9 +68,7 @@ public class CubeMovement : MonoBehaviour
     IEnumerator RutinaBuff(float multiplicador, float duracion)
     {
         multiplicadorBuff = multiplicador;
-        Debug.Log($"Buff activo x{multiplicador} por {duracion}s");
         yield return new WaitForSeconds(duracion);
         multiplicadorBuff = 1f;
-        Debug.Log("Buff expirado.");
     }
 }

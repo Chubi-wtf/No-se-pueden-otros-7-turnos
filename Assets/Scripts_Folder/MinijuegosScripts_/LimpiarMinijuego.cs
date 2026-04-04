@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
@@ -51,7 +51,10 @@ public class LimpiarMinijuego : MonoBehaviour
         eventoBuffActivo = forzarEventoBuff || (Random.Range(0, 5) == 0);
         forzarEventoBuff = false;
 
-        tiempoRestante = tiempoMaximo + (eventoBuffActivo ? tiempoExtraConEvento : 0f);
+        float multiplicadorTiempo = MinigameManager.Instance != null
+            ? MinigameManager.Instance.ObtenerMultiplicadorTiempoTurnoActual()
+            : 1f;
+        tiempoRestante = (tiempoMaximo * multiplicadorTiempo) + (eventoBuffActivo ? tiempoExtraConEvento : 0f);
 
         if (barraTemporizador != null)
         {
@@ -137,7 +140,6 @@ public class LimpiarMinijuego : MonoBehaviour
 
                     if (panelBuff != null) panelBuff.SetActive(false);
                     if (barraSpam != null) barraSpam.gameObject.SetActive(false);
-                    Debug.Log("Buff de velocidad concedido!");
                 }
             }
         }
@@ -172,7 +174,6 @@ public class LimpiarMinijuego : MonoBehaviour
         SonidoManager.Instance?.Acierto();
         if (panelBuff != null) panelBuff.SetActive(false);
         if (barraSpam != null) barraSpam.gameObject.SetActive(false);
-        Debug.Log("Mesa limpia a tiempo!");
         MinigameManager.Instance?.CerrarMinijuego(true);
     }
 
@@ -182,7 +183,6 @@ public class LimpiarMinijuego : MonoBehaviour
         SonidoManager.Instance?.Fallo();
         if (panelBuff != null) panelBuff.SetActive(false);
         if (barraSpam != null) barraSpam.gameObject.SetActive(false);
-        Debug.Log("Tiempo agotado!");
         MinigameManager.Instance?.CerrarMinijuego(false);
     }
 }

@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using System.Collections;
@@ -267,7 +267,6 @@ public class CookingMinigame : MonoBehaviour
         if (buffGanado)
         {
             SanidadManager.Instance?.ActivarInmunidadCordura(duracionBuff);
-            Debug.Log($"Buff de inmunidad concedido por {duracionBuff}s");
         }
 
         if (panelNervios != null) panelNervios.SetActive(false);
@@ -292,7 +291,10 @@ public class CookingMinigame : MonoBehaviour
 
         minijuegoNormalListo = true;
 
-        tiempoRestante = tiempoMaximoBase + (conTiempoExtra ? tiempoExtraMinijuego : 0f);
+        float multiplicadorTiempo = MinigameManager.Instance != null
+            ? MinigameManager.Instance.ObtenerMultiplicadorTiempoTurnoActual()
+            : 1f;
+        tiempoRestante = (tiempoMaximoBase * multiplicadorTiempo) + (conTiempoExtra ? tiempoExtraMinijuego : 0f);
 
         if (barraTemporizador != null)
         {

@@ -69,15 +69,15 @@ public class SanidadManager : MonoBehaviour
 
     public void RecibirDañoMental()
     {
-        if (graciaActiva) { Debug.Log("Daño bloqueado por gracia."); return; }
-        if (inmunidadActiva) { Debug.Log("Daño bloqueado por inmunidad."); return; }
+        if (graciaActiva) { return; }
+        if (inmunidadActiva) { return; }
         AplicarDaño(daoPorFallo);
     }
 
     public void RecibirDañoPersonalizado(float cantidad)
     {
-        if (graciaActiva) { Debug.Log("Daño bloqueado por gracia."); return; }
-        if (inmunidadActiva) { Debug.Log("Daño bloqueado por inmunidad."); return; }
+        if (graciaActiva) { return; }
+        if (inmunidadActiva) { return; }
         AplicarDaño(cantidad);
     }
 
@@ -99,10 +99,8 @@ public class SanidadManager : MonoBehaviour
     private IEnumerator RutinaInmunidad(float duracion)
     {
         inmunidadActiva = true;
-        Debug.Log($"Inmunidad a pérdida de cordura activa por {duracion}s");
         yield return new WaitForSeconds(duracion);
         inmunidadActiva = false;
-        Debug.Log("Inmunidad de cordura expirada.");
     }
 
 
@@ -113,9 +111,18 @@ public class SanidadManager : MonoBehaviour
 
         if (sanidadActual <= 0f)
         {
-            Debug.Log("COLAPSO MENTAL!");
             GameoverManager.Instance?.ActivarGameOver();
         }
+    }
+
+    public void RecibirDanioPersonalizado(float cantidad)
+    {
+        RecibirDañoPersonalizado(cantidad);
+    }
+
+    public void RecibirDanioMental()
+    {
+        RecibirDañoMental();
     }
 
     void ActualizarVisuales()
