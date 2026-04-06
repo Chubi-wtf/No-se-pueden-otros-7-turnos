@@ -239,4 +239,22 @@ public class MinigameManager : MonoBehaviour
         float progreso = Mathf.Clamp01(tiempoTurnoActual / duracion);
         MusicaManager.Instance?.ActualizarProgresoTurno(progreso);
     }
+
+    public void DebugForzarPanelSiguienteTurno()
+    {
+        if (esperandoInicioSiguienteTurno)
+            return;
+
+        CompletarTurno();
+    }
+
+    public void DebugDejarAUnoDelSiguienteTurno()
+    {
+        if (esperandoInicioSiguienteTurno)
+            return;
+
+        int necesarios = ObtenerEventosNecesariosTurnoActual();
+        eventosCompletadosEnTurno = Mathf.Max(0, necesarios - 1);
+        ActualizarTextoProgreso();
+    }
 }
