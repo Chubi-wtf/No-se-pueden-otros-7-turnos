@@ -168,11 +168,13 @@ public class MinigameManager : MonoBehaviour
             return;
         }
 
-        turnoActual = Mathf.Clamp(turnoActual + 1, 0, eventosPorTurno.Length - 1);
+        int siguienteTurno = Mathf.Clamp(turnoActual + 1, 0, eventosPorTurno.Length - 1);
+        turnoActual = siguienteTurno;
         eventosCompletadosEnTurno = 0;
         tiempoTurnoActual = 0f;
         esperandoInicioSiguienteTurno = false;
 
+        ManejoDenivel.Instance?.MostrarNivel(siguienteTurno);
         OcultarPanelCambioTurno();
         ActualizarTextoProgreso();
         ActualizarMusicaTurno();
