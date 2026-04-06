@@ -50,7 +50,9 @@ public class MinigameManager : MonoBehaviour
         turnoActual = Mathf.Clamp(turnoActual, 0, eventosPorTurno.Length - 1);
         eventosCompletadosEnTurno = 0;
         tiempoTurnoActual = 0f;
+
         ActualizarTextoProgreso();
+        MusicaManager.Instance?.ActualizarNivelTurno(turnoActual);
         ActualizarMusicaTurno();
 
         if (panelCambioTurno != null)
@@ -112,7 +114,7 @@ public class MinigameManager : MonoBehaviour
         }
         else
         {
-            SanidadManager.Instance?.RecibirDañoMental();
+            SanidadManager.Instance?.RecibirDanioMental();
         }
     }
 
@@ -130,7 +132,7 @@ public class MinigameManager : MonoBehaviour
         }
     }
 
-    private void RegistrarMinijuegoCompletado()
+    void RegistrarMinijuegoCompletado()
     {
         eventosCompletadosEnTurno++;
         ActualizarTextoProgreso();
@@ -139,7 +141,7 @@ public class MinigameManager : MonoBehaviour
             CompletarTurno();
     }
 
-    private void CompletarTurno()
+    void CompletarTurno()
     {
         ReproducirCampana();
 
@@ -168,15 +170,15 @@ public class MinigameManager : MonoBehaviour
             return;
         }
 
-        int siguienteTurno = Mathf.Clamp(turnoActual + 1, 0, eventosPorTurno.Length - 1);
-        turnoActual = siguienteTurno;
+        turnoActual = Mathf.Clamp(turnoActual + 1, 0, eventosPorTurno.Length - 1);
         eventosCompletadosEnTurno = 0;
         tiempoTurnoActual = 0f;
         esperandoInicioSiguienteTurno = false;
 
-        ManejoDenivel.Instance?.MostrarNivel(siguienteTurno);
+        ManejoDenivel.Instance?.MostrarNivel(turnoActual);
         OcultarPanelCambioTurno();
         ActualizarTextoProgreso();
+        MusicaManager.Instance?.ActualizarNivelTurno(turnoActual);
         ActualizarMusicaTurno();
     }
 
@@ -211,13 +213,13 @@ public class MinigameManager : MonoBehaviour
             audioSourceCampana.PlayOneShot(sonidoCampana);
     }
 
-    private void ActualizarTextoProgreso()
+    void ActualizarTextoProgreso()
     {
         if (textoProgreso != null)
             textoProgreso.text = $"{eventosCompletadosEnTurno}/{ObtenerEventosNecesariosTurnoActual()}";
     }
 
-    private int ObtenerEventosNecesariosTurnoActual()
+    int ObtenerEventosNecesariosTurnoActual()
     {
         if (eventosPorTurno == null || eventosPorTurno.Length == 0)
             return 5;

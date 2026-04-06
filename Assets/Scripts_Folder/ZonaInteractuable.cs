@@ -1,6 +1,5 @@
 using UnityEngine;
 using UnityEngine.Events;
-using TMPro;
 
 public enum TipoMinijuego { Ninguno, Limpiar, Cocina, Cafe }
 
@@ -39,7 +38,7 @@ public class ZonaInteractuable : MonoBehaviour
                 instruccionJuego = "Arrastra los ingredientes a los slots\nen el orden exacto de la secuencia.";
                 break;
             case TipoMinijuego.Cafe:
-                instruccionJuego = "Hay que hacer café! Sigue la secuencia de botones en pantalla";
+                instruccionJuego = "Hay que hacer cafe! Sigue la secuencia de botones en pantalla";
                 break;
             default:
                 instruccionJuego = "";
@@ -51,7 +50,8 @@ public class ZonaInteractuable : MonoBehaviour
 
     void Update()
     {
-        if (!tareaActiva) return;
+        if (!tareaActiva)
+            return;
 
         tiempoRestante -= Time.deltaTime;
 
@@ -72,7 +72,8 @@ public class ZonaInteractuable : MonoBehaviour
         tareaActiva = true;
         tiempoRestante = tiempoLimite;
 
-        if (modeloVisual != null) modeloVisual.SetActive(true);
+        if (modeloVisual != null)
+            modeloVisual.SetActive(true);
 
         if (iconoEstado != null)
         {
@@ -80,29 +81,49 @@ public class ZonaInteractuable : MonoBehaviour
             iconoEstado.gameObject.SetActive(true);
         }
 
-        if (iconoTarea != null) iconoTarea.gameObject.SetActive(true);
+        if (iconoTarea != null)
+            iconoTarea.gameObject.SetActive(true);
     }
 
     public void ApagarTarea()
     {
         tareaActiva = false;
-        if (modeloVisual != null) modeloVisual.SetActive(false);
-        if (iconoEstado != null) iconoEstado.gameObject.SetActive(false);
-        if (iconoTarea != null) iconoTarea.gameObject.SetActive(false);
+
+        if (modeloVisual != null)
+            modeloVisual.SetActive(false);
+
+        if (iconoEstado != null)
+            iconoEstado.gameObject.SetActive(false);
+
+        if (iconoTarea != null)
+            iconoTarea.gameObject.SetActive(false);
     }
 
-    private void FallarTarea()
+    void FallarTarea()
     {
         ApagarTarea();
-        SanidadManager.Instance?.RecibirDañoMental();
+        SanidadManager.Instance?.RecibirDanioMental();
     }
 
     public void Interact()
     {
-        if (pantallaMinijuego != null)
-            MinigameManager.Instance?.AbrirMinijuego(pantallaMinijuego);
+        GameObject panelAabrir = ObtenerPanelRaiz(pantallaMinijuego);
+        if (panelAabrir != null)
+            MinigameManager.Instance?.AbrirMinijuego(panelAabrir);
 
         onInteract?.Invoke();
         ApagarTarea();
+    }
+
+    GameObject ObtenerPanelRaiz(GameObject panel)
+    {
+        if (panel == null)
+            return null;
+
+        Canvas canvas = panel.GetComponentInParent<Canvas>(true);
+        if (canvas != null)
+            return canvas.gameObject;
+
+        return panel;
     }
 }

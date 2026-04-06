@@ -33,6 +33,9 @@ public class DebuggearJuegos : MonoBehaviour
     public KeyCode teclaGameOver = KeyCode.F7;
     public KeyCode teclaPanelSiguienteTurno = KeyCode.F10;
     public KeyCode teclaQuedarAUnoDelTurno = KeyCode.F11;
+    public KeyCode teclaTiempoX2 = KeyCode.Alpha8;
+    public KeyCode teclaTiempoX3 = KeyCode.Alpha9;
+    public KeyCode teclaTiempoNormal = KeyCode.Alpha0;
 
     [Header("Eventos forzados")]
     public bool forzarBuffLimpieza = false;
@@ -104,6 +107,15 @@ public class DebuggearJuegos : MonoBehaviour
 
         if (Input.GetKeyDown(teclaQuedarAUnoDelTurno))
             DejarTurnoAUno();
+
+        if (Input.GetKeyDown(teclaTiempoX2))
+            PonerTiempoX2();
+
+        if (Input.GetKeyDown(teclaTiempoX3))
+            PonerTiempoX3();
+
+        if (Input.GetKeyDown(teclaTiempoNormal))
+            PonerTiempoNormal();
 
         if (Input.GetKey(teclaReinicio))
         {
@@ -201,6 +213,21 @@ public class DebuggearJuegos : MonoBehaviour
     public void DejarTurnoAUno()
     {
         MinigameManager.Instance?.DebugDejarAUnoDelSiguienteTurno();
+    }
+
+    public void PonerTiempoX2()
+    {
+        Time.timeScale = 2f;
+    }
+
+    public void PonerTiempoX3()
+    {
+        Time.timeScale = 3f;
+    }
+
+    public void PonerTiempoNormal()
+    {
+        Time.timeScale = 1f;
     }
 
     bool AbrirPanel(GameObject panel, string nombre)
