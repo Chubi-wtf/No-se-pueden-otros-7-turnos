@@ -68,13 +68,18 @@ public class DebuggearJuegos : MonoBehaviour
         string pedido,
         string mesa)
     {
-        GameObject panelObjetivo = ObtenerPanelRaiz(panelServirPedido);
+        GameObject panelObjetivo = panelServirPedido;
 
-        if (panelObjetivo == null && minijuegoServirPedido != null)
-            panelObjetivo = ObtenerPanelRaiz(minijuegoServirPedido.gameObject);
+        if (panelObjetivo == null && minijuegoServirPedido != null && minijuegoServirPedido.panelMinijuego != null)
+            panelObjetivo = minijuegoServirPedido.panelMinijuego;
+        else if (panelObjetivo == null && minijuegoServirPedido != null)
+            panelObjetivo = minijuegoServirPedido.gameObject;
 
         if (panelObjetivo == null)
+        {
+            Debug.LogWarning("DebuggearJuegos: panelObjetivo quedo null al intentar abrir servir pedido.");
             return false;
+        }
 
         if (minijuegoServirPedido != null)
         {
@@ -85,7 +90,16 @@ public class DebuggearJuegos : MonoBehaviour
         }
 
         if (MinigameManager.Instance == null)
+        {
+            Debug.LogWarning("DebuggearJuegos: MinigameManager.Instance es null al abrir servir pedido.");
             return false;
+        }
+
+        Debug.Log(
+            $"DebuggearJuegos: AbrirServirPedidoDesdeEntrega -> " +
+            $"PanelInspector={(panelServirPedido != null ? panelServirPedido.name : "null")}, " +
+            $"PanelObjetivo={panelObjetivo.name}, " +
+            $"MinijuegoServir={(minijuegoServirPedido != null ? minijuegoServirPedido.name : "null")}");
 
         return AbrirPanel(panelObjetivo);
     }
@@ -100,28 +114,21 @@ public class DebuggearJuegos : MonoBehaviour
         }
     }
 
-    GameObject ObtenerPanelRaiz(GameObject panel)
-    {
-        if (panel == null)
-            return null;
-
-        Canvas canvas = panel.GetComponentInParent<Canvas>(true);
-        if (canvas != null)
-            return canvas.gameObject;
-
-        return panel;
-    }
-
     bool AbrirPanel(GameObject panel)
     {
         if (panel == null || MinigameManager.Instance == null)
+        {
+            Debug.LogWarning(
+                $"DebuggearJuegos: AbrirPanel fallo. PanelNull={(panel == null)}, " +
+                $"MinigameManagerNull={(MinigameManager.Instance == null)}");
             return false;
+        }
 
-        GameObject panelRaiz = ObtenerPanelRaiz(panel);
-        if (panelRaiz == null)
-            return false;
+        Debug.Log(
+            $"DebuggearJuegos: AbrirPanel -> PanelOriginal={panel.name}, " +
+            $"ActivoSelfAntes={panel.activeSelf}, ActivoJerarquiaAntes={panel.activeInHierarchy}");
 
-        MinigameManager.Instance.AbrirMinijuego(panelRaiz);
+        MinigameManager.Instance.AbrirMinijuego(panel);
         return true;
     }
 }

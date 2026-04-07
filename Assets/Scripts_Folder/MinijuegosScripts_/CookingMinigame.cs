@@ -417,6 +417,7 @@ public class CookingMinigame : MonoBehaviour
         }
         else
         {
+            EntregaBandeja.ObtenerInstancia()?.LimpiarEstadoResidualSinEntrega();
             MinigameManager.Instance?.CerrarMinijuego(false);
         }
     }

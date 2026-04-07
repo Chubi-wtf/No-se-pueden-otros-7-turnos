@@ -3,6 +3,8 @@ using UnityEngine;
 
 public class GestorEventos : MonoBehaviour
 {
+    public static GestorEventos Instance { get; private set; }
+
     [Header("Todas las tareas del nivel")]
     public ZonaInteractuable[] todasLasZonas;
 
@@ -19,7 +21,18 @@ public class GestorEventos : MonoBehaviour
     public float[] tiemposMinimosPorNivel = { 4f, 3f, 2f };
     public float[] tiemposMaximosPorNivel = { 4f, 3f, 2f };
 
+    [Header("Reset tras minijuego")]
+    public float duracionCooldownPostMinijuego = 1.5f;
+
     private float timerSpawn;
+    private float tiempoFinCooldownPostMinijuego = -1f;
+
+    public bool EstaEnCooldownPostMinijuego => Time.unscaledTime < tiempoFinCooldownPostMinijuego;
+
+    void Awake()
+    {
+        Instance = this;
+    }
 
     void Start()
     {
@@ -31,6 +44,9 @@ public class GestorEventos : MonoBehaviour
     {
         if (buscarZonasAutomaticamente)
             RefrescarZonas();
+
+        if (EstaEnCooldownPostMinijuego)
+            return;
 
         timerSpawn -= Time.deltaTime;
 
@@ -61,6 +77,21 @@ public class GestorEventos : MonoBehaviour
         todasLasZonas = zonas.ToArray();
     }
 
+    public void IniciarCooldownPostMinijuego(float duracion = -1f)
+    {
+        float duracionReal = duracion >= 0f ? duracion : duracionCooldownPostMinijuego;
+        duracionReal = Mathf.Max(0f, duracionReal);
+
+        tiempoFinCooldownPostMinijuego = Time.unscaledTime + duracionReal;
+
+        RefrescarZonas();
+        ApagarTodasLasZonasActivas();
+        PlayerInteractuable jugador = FindFirstObjectByType<PlayerInteractuable>();
+        jugador?.CancelarInteraccionActual();
+        UI_Manager.instance?.cerrarPanel();
+        ReiniciarTimerSpawn();
+    }
+
     void ActivarEventoAleatorio()
     {
         if (todasLasZonas == null || todasLasZonas.Length == 0)
@@ -83,6 +114,21 @@ public class GestorEventos : MonoBehaviour
 
         int indice = Random.Range(0, zonasDisponibles.Count);
         zonasDisponibles[indice].ActivarTarea();
+    }
+
+    void ApagarTodasLasZonasActivas()
+    {
+        if (todasLasZonas == null)
+            return;
+
+        for (int i = 0; i < todasLasZonas.Length; i++)
+        {
+            ZonaInteractuable zona = todasLasZonas[i];
+            if (zona == null)
+                continue;
+
+            zona.ApagarTarea();
+        }
     }
 
     void ReiniciarTimerSpawn()

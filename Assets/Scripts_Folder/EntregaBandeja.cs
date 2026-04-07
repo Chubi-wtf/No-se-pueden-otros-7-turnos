@@ -70,7 +70,7 @@ public class EntregaBandeja : MonoBehaviour
     [Header("Interaccion con mesa")]
     public GameObject panelInteraccionEntrega;
     public TextMeshProUGUI textoInteraccionEntrega;
-    public string mensajeInteraccionEntrega = "Dejar pedido con la letra F";
+    public string mensajeInteraccionEntrega = "Ve manteniendo el balance con Q y E, y aprieta la S cuando la barra este en verde!";
 
     [Header("Deteccion de entrega")]
     public float radioEntregaFallback = 1.5f;
@@ -78,6 +78,7 @@ public class EntregaBandeja : MonoBehaviour
     [Header("Minijuego de servir")]
     public GameObject panelEntrega;
     public MinijuegoServirPEDIDO minijuegoServirPedido;
+    public float bloqueoTrasCerrarServir = 3f;
 
     private enum EstadoEntrega
     {
@@ -96,6 +97,7 @@ public class EntregaBandeja : MonoBehaviour
     private string nombrePedido = "pedido";
     private bool colliderEntregaEraTrigger = false;
     private EntregaMesaTriggerRelay relayEntregaMesa;
+    private float tiempoFinBloqueoServir = -1f;
 
     public bool HayEntregaActiva => estadoActual != EstadoEntrega.Inactiva;
 
@@ -127,8 +129,9 @@ public class EntregaBandeja : MonoBehaviour
         DebuggearJuegos debug = DebuggearJuegos.ObtenerInstancia();
         if (panelEntrega == null && debug != null && debug.panelServirPedido != null)
             panelEntrega = ObtenerPanelRaiz(debug.panelServirPedido);
-
-        if (panelEntrega == null && minijuegoServirPedido != null)
+        else if (panelEntrega == null && minijuegoServirPedido != null && minijuegoServirPedido.panelMinijuego != null)
+            panelEntrega = ObtenerPanelRaiz(minijuegoServirPedido.panelMinijuego);
+        else if (panelEntrega == null && minijuegoServirPedido != null)
             panelEntrega = ObtenerPanelRaiz(minijuegoServirPedido.gameObject);
 
         if (panelEntrega != null)
@@ -142,6 +145,12 @@ public class EntregaBandeja : MonoBehaviour
         if (playerTransform == null)
             playerTransform = FindFirstObjectByType<CubeMovement>()?.transform;
 
+        if (EstaBloqueadoTemporalmenteTrasServir())
+        {
+            MostrarPromptEntrega(false);
+            return;
+        }
+
         if (estadoActual != EstadoEntrega.EnCamino || mesaObjetivo == null || playerTransform == null)
         {
             MostrarPromptEntrega(false);
@@ -153,13 +162,25 @@ public class EntregaBandeja : MonoBehaviour
         MostrarPromptEntrega(cerca);
 
         if (cerca && Input.GetKeyDown(KeyCode.F))
+        {
+            Debug.Log(
+                $"EntregaBandeja: se presiono F en rango. " +
+                $"Mesa={mesaObjetivo?.name}, PanelEntregaAsignado={(panelEntrega != null)}, " +
+                $"MinijuegoServirAsignado={(minijuegoServirPedido != null)}");
             AbrirMinijuegoServir();
+        }
     }
 
     public bool IniciarEntrega(string pedido)
     {
-        if (estadoActual != EstadoEntrega.Inactiva)
+        if (EstaBloqueadoTemporalmenteTrasServir())
             return false;
+
+        if (estadoActual != EstadoEntrega.Inactiva)
+        {
+            Debug.LogWarning("EntregaBandeja: se intento iniciar una entrega mientras otra seguia activa.");
+            return false;
+        }
 
         MesaEntregaConfig[] mesasConfiguradasDisponibles = ObtenerMesasConfiguradasDisponibles();
         if (mesasConfiguradasDisponibles != null && mesasConfiguradasDisponibles.Length > 0)
@@ -184,11 +205,19 @@ public class EntregaBandeja : MonoBehaviour
         }
 
         if (mesaObjetivo == null)
+        {
+            Debug.LogWarning("EntregaBandeja: no se pudo resolver una mesa objetivo.");
             return false;
+        }
 
         nombrePedido = string.IsNullOrEmpty(pedido) ? "pedido" : pedido;
         PrepararTriggerEntrega();
         mesaObjetivoController?.ReceiveNewOrder();
+
+        Debug.Log(
+            $"EntregaBandeja: entrega iniciada. Pedido={nombrePedido}, Mesa={mesaObjetivo.name}, " +
+            $"MesaController={(mesaObjetivoController != null ? mesaObjetivoController.name : "null")}, " +
+            $"ColliderEntrega={(colliderEntregaMesa != null ? colliderEntregaMesa.name : "null")}");
 
         BandejaHUD bandeja = BuscarBandejaHUD();
         bandeja?.ActivarModoEntrega();
@@ -235,6 +264,7 @@ public class EntregaBandeja : MonoBehaviour
         BuscarBandejaHUD()?.DesactivarModoEntrega();
         OcultarTextoMeta();
         MostrarPromptEntrega(false);
+        ActivarBloqueoTemporalTrasServir();
 
         MinigameManager.Instance?.CerrarMinijuego(true);
     }
@@ -273,37 +303,82 @@ public class EntregaBandeja : MonoBehaviour
         BuscarBandejaHUD()?.DesactivarModoEntrega();
         OcultarTextoMeta();
         MostrarPromptEntrega(false);
+        ActivarBloqueoTemporalTrasServir();
+    }
+
+    public void LimpiarEstadoResidualSinEntrega()
+    {
+        if (estadoActual != EstadoEntrega.Inactiva)
+        {
+            CancelarEntrega();
+            return;
+        }
+
+        if (indicadorActivo != null)
+            Destroy(indicadorActivo);
+        indicadorActivo = null;
+
+        if (panelEntrega != null)
+            panelEntrega.SetActive(false);
+
+        LimpiarTriggerEntrega();
+        colliderEntregaMesa = null;
+        mesaObjetivoConfig = null;
+        mesaObjetivoController = null;
+        mesaObjetivo = null;
+
+        BuscarBandejaHUD()?.DesactivarModoEntrega();
+        OcultarTextoMeta();
+        MostrarPromptEntrega(false);
     }
 
     void AbrirMinijuegoServir()
     {
-        if (estadoActual != EstadoEntrega.EnCamino)
+        if (EstaBloqueadoTemporalmenteTrasServir())
             return;
+
+        if (estadoActual != EstadoEntrega.EnCamino)
+        {
+            Debug.LogWarning($"EntregaBandeja: se intento abrir servir pero el estado actual es {estadoActual}.");
+            return;
+        }
 
         string nombreMesa = mesaObjetivo != null ? mesaObjetivo.name : "Mesa";
         DebuggearJuegos debug = DebuggearJuegos.ObtenerInstancia();
 
         if (debug != null && debug.panelServirPedido != null)
             panelEntrega = ObtenerPanelRaiz(debug.panelServirPedido);
+        else if (minijuegoServirPedido != null && minijuegoServirPedido.panelMinijuego != null)
+            panelEntrega = ObtenerPanelRaiz(minijuegoServirPedido.panelMinijuego);
         else if (panelEntrega == null && minijuegoServirPedido != null)
             panelEntrega = ObtenerPanelRaiz(minijuegoServirPedido.gameObject);
 
         if (panelEntrega == null)
+        {
+            Debug.LogWarning(
+                "EntregaBandeja: no se pudo abrir el minijuego porque panelEntrega quedo null.");
             return;
+        }
+
+        Debug.Log(
+            $"EntregaBandeja: abriendo servir pedido. " +
+            $"PanelRaiz={panelEntrega.name}, ActivoEnJerarquia={panelEntrega.activeInHierarchy}, " +
+            $"DebuggearJuegos={(debug != null)}, " +
+            $"PanelDebug={(debug != null && debug.panelServirPedido != null ? debug.panelServirPedido.name : "null")}");
 
         estadoActual = EstadoEntrega.EnMinijuego;
         MostrarPromptEntrega(false);
 
-        if (debug != null && debug.AbrirServirPedidoDesdeEntrega(minijuegoServirPedido, nombrePedido, nombreMesa))
-            return;
+        Debug.Log("EntregaBandeja: llamando a MinigameManager.AbrirMinijuego desde EntregaBandeja.");
+        MinigameManager.Instance?.AbrirMinijuego(panelEntrega);
 
         if (minijuegoServirPedido != null)
         {
-            minijuegoServirPedido.PrepararEntrega(nombrePedido, nombreMesa);
-            minijuegoServirPedido.panelMinijuego = ObtenerPanelVisibleInterno(panelEntrega);
+            minijuegoServirPedido.AbrirPanelPropio(nombrePedido, nombreMesa);
+            Debug.Log(
+                $"EntregaBandeja: panelMinijuego preparado en " +
+                $"{(minijuegoServirPedido.panelMinijuego != null ? minijuegoServirPedido.panelMinijuego.name : "null")}");
         }
-
-        MinigameManager.Instance?.AbrirMinijuego(panelEntrega);
     }
 
     GameObject ObtenerPanelRaiz(GameObject panel)
@@ -316,17 +391,6 @@ public class EntregaBandeja : MonoBehaviour
             return canvas.gameObject;
 
         return panel;
-    }
-
-    GameObject ObtenerPanelVisibleInterno(GameObject panelRaiz)
-    {
-        if (panelRaiz == null)
-            return null;
-
-        if (minijuegoServirPedido != null && minijuegoServirPedido.panelMinijuego != null)
-            return minijuegoServirPedido.panelMinijuego;
-
-        return panelRaiz;
     }
 
     void PrepararTriggerEntrega()
@@ -360,12 +424,18 @@ public class EntregaBandeja : MonoBehaviour
 
     public void NotificarJugadorEnTrigger(Collider other)
     {
+        if (EstaBloqueadoTemporalmenteTrasServir())
+            return;
+
         if (estadoActual != EstadoEntrega.EnCamino || colliderEntregaMesa == null)
             return;
 
         if (!EsColliderDelJugador(other))
             return;
 
+        Debug.Log(
+            $"EntregaBandeja: jugador detectado en trigger de entrega. " +
+            $"Mesa={mesaObjetivo?.name}, Collider={colliderEntregaMesa.name}");
         MostrarPromptEntrega(true);
     }
 
@@ -397,6 +467,32 @@ public class EntregaBandeja : MonoBehaviour
         {
             textoInteraccionEntrega.text = mensajeInteraccionEntrega;
             textoInteraccionEntrega.gameObject.SetActive(visible);
+        }
+    }
+
+    bool EstaBloqueadoTemporalmenteTrasServir()
+    {
+        return Time.unscaledTime < tiempoFinBloqueoServir;
+    }
+
+    void ActivarBloqueoTemporalTrasServir()
+    {
+        float duracion = Mathf.Max(0f, bloqueoTrasCerrarServir);
+        if (duracion <= 0f)
+            return;
+
+        tiempoFinBloqueoServir = Time.unscaledTime + duracion;
+
+        if (panelEntrega != null)
+            panelEntrega.SetActive(false);
+
+        if (minijuegoServirPedido != null)
+        {
+            if (minijuegoServirPedido.panelPrevioMinijuego != null)
+                minijuegoServirPedido.panelPrevioMinijuego.SetActive(false);
+
+            if (minijuegoServirPedido.panelMinijuego != null)
+                minijuegoServirPedido.panelMinijuego.SetActive(false);
         }
     }
 

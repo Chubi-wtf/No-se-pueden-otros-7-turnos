@@ -78,7 +78,16 @@ public class MinigameManager : MonoBehaviour
 
     public void AbrirMinijuego(GameObject pantallaMinijuego)
     {
-        if (pantallaMinijuego == null) return;
+        if (pantallaMinijuego == null)
+        {
+            Debug.LogWarning("MinigameManager: se intento abrir un minijuego con panel null.");
+            return;
+        }
+
+        Debug.Log(
+            $"MinigameManager: AbrirMinijuego -> {pantallaMinijuego.name}, " +
+            $"ActivoSelfAntes={pantallaMinijuego.activeSelf}, " +
+            $"ActivoJerarquiaAntes={pantallaMinijuego.activeInHierarchy}");
 
         if (panelActual != null && panelActual != pantallaMinijuego)
             panelActual.SetActive(false);
@@ -89,6 +98,11 @@ public class MinigameManager : MonoBehaviour
         panelActual = pantallaMinijuego;
         Time.timeScale = 0f;
         pantallaMinijuego.SetActive(true);
+
+        Debug.Log(
+            $"MinigameManager: panel activado -> {pantallaMinijuego.name}, " +
+            $"ActivoSelfDespues={pantallaMinijuego.activeSelf}, " +
+            $"ActivoJerarquiaDespues={pantallaMinijuego.activeInHierarchy}");
 
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
@@ -106,6 +120,8 @@ public class MinigameManager : MonoBehaviour
             panelActual.SetActive(false);
             panelActual = null;
         }
+
+        GestorEventos.Instance?.IniciarCooldownPostMinijuego();
 
         if (completado)
         {
@@ -130,6 +146,8 @@ public class MinigameManager : MonoBehaviour
             panelActual.SetActive(false);
             panelActual = null;
         }
+
+        GestorEventos.Instance?.IniciarCooldownPostMinijuego();
     }
 
     void RegistrarMinijuegoCompletado()

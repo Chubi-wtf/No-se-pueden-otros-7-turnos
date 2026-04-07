@@ -34,6 +34,7 @@ public class PlayerInteractuable : MonoBehaviour
     void TryEntrar(Collider other)
     {
         if (zonaActual != null) return;
+        if (GestorEventos.Instance != null && GestorEventos.Instance.EstaEnCooldownPostMinijuego) return;
 
         EntregaBandeja entrega = EntregaBandeja.ObtenerInstancia();
         if (entrega != null && entrega.HayEntregaActiva) return;
@@ -53,11 +54,26 @@ public class PlayerInteractuable : MonoBehaviour
     {
         yield return new WaitForSecondsRealtime(2.5f);
 
-        if (zona != null && zonaActual == zona)
+        bool cooldownActivo = GestorEventos.Instance != null && GestorEventos.Instance.EstaEnCooldownPostMinijuego;
+
+        if (zona != null && zonaActual == zona && zona.tareaActiva && !cooldownActivo)
         {
             UI_Manager.instance?.cerrarPanel();
             zonaActual = null;
             zona.Interact();
         }
+    }
+
+    public void CancelarInteraccionActual()
+    {
+        if (rutinaEspera != null)
+        {
+            StopCoroutine(rutinaEspera);
+            rutinaEspera = null;
+        }
+
+        zonaActual = null;
+        UI_Manager.instance?.cerrarPanel();
+        Time.timeScale = 1f;
     }
 }

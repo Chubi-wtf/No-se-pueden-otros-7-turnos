@@ -346,6 +346,7 @@ public class MinijuegoCafe : MonoBehaviour
         minijuegoActivo = false;
         RestaurarObjetoVertido();
         RestaurarCamaraJugador();
+        EntregaBandeja.ObtenerInstancia()?.LimpiarEstadoResidualSinEntrega();
 
         SonidoManager.Instance?.Fallo();
         MinigameManager.Instance?.CerrarMinijuego(false);

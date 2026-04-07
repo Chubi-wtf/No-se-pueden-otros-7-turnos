@@ -4,7 +4,11 @@ using TMPro;
 
 public class MinijuegoServirPEDIDO : MonoBehaviour
 {
-    [Header("Panel")]
+    [Header("Panel previo")]
+    public GameObject panelPrevioMinijuego;
+    public TextMeshProUGUI textoPanelPrevio;
+
+    [Header("Juego")]
     public GameObject panelMinijuego;
 
     [Header("Referencias UI")]
@@ -50,11 +54,14 @@ public class MinijuegoServirPEDIDO : MonoBehaviour
     private float progresoDescenso = 0f;
     private float progresoTiming = 0f;
     private bool terminado = false;
+    private bool esperandoInicio = false;
     private Quaternion rotacionInicialBandeja = Quaternion.identity;
     private bool bandejaInicialGuardada = false;
 
     void Awake()
     {
+        ResolverReferenciasAutomaticas();
+
         if (imagenBandeja != null)
         {
             rectBandeja = imagenBandeja.rectTransform;
@@ -62,22 +69,31 @@ public class MinijuegoServirPEDIDO : MonoBehaviour
             rotacionInicialBandeja = rectBandeja.localRotation;
             bandejaInicialGuardada = true;
         }
-    }
 
-    void OnEnable()
-    {
-        MostrarPanel(true);
-        ReiniciarEstado();
+        MostrarPanelPrevio(false);
+        MostrarPanel(false);
+        terminado = true;
     }
 
     void OnDisable()
     {
+        terminado = true;
+        esperandoInicio = false;
+        MostrarPanelPrevio(false);
         RestaurarTransformBandeja();
         MostrarPanel(false);
     }
 
     void Update()
     {
+        if (esperandoInicio)
+        {
+            if (Input.GetKeyDown(KeyCode.F))
+                ComenzarJuego();
+            return;
+        }
+
+        if (panelMinijuego != null && !panelMinijuego.activeInHierarchy) return;
         if (terminado) return;
 
         ActualizarBalance();
@@ -90,6 +106,25 @@ public class MinijuegoServirPEDIDO : MonoBehaviour
     {
         nombrePedido = string.IsNullOrEmpty(pedido) ? "pedido" : pedido;
         nombreMesa = string.IsNullOrEmpty(mesa) ? "Mesa" : mesa;
+    }
+
+    public void AbrirPanelPropio(string pedido, string mesa)
+    {
+        ResolverReferenciasAutomaticas();
+        PrepararEntrega(pedido, mesa);
+        terminado = true;
+        esperandoInicio = true;
+        MostrarPanel(false);
+
+        if (panelPrevioMinijuego != null)
+        {
+            MostrarPanelPrevio(true);
+            ActualizarTextoPrevio();
+        }
+        else
+        {
+            ComenzarJuego();
+        }
     }
 
     void ReiniciarEstado()
@@ -144,6 +179,21 @@ public class MinijuegoServirPEDIDO : MonoBehaviour
             textoEstado.text = $"Bajando bandeja... 0/{aciertosNecesarios}";
 
         RefrescarVisuales();
+    }
+
+    void ActualizarTextoPrevio()
+    {
+        if (textoPanelPrevio != null)
+            textoPanelPrevio.text = $"Ve manteniendo el balance con Q y E, y aprieta la S cuando la barra este en verde!\n\nPresiona F para comenzar.";
+    }
+
+    void ComenzarJuego()
+    {
+        ResolverReferenciasAutomaticas();
+        esperandoInicio = false;
+        MostrarPanelPrevio(false);
+        MostrarPanel(true);
+        ReiniciarEstado();
     }
 
     void ActualizarBalance()
@@ -289,6 +339,8 @@ public class MinijuegoServirPEDIDO : MonoBehaviour
     {
         yield return new WaitForSecondsRealtime(retrasoCierre);
         RestaurarTransformBandeja();
+        esperandoInicio = false;
+        MostrarPanelPrevio(false);
         MostrarPanel(false);
 
         EntregaBandeja entrega = EntregaBandeja.ObtenerInstancia();
@@ -311,6 +363,12 @@ public class MinijuegoServirPEDIDO : MonoBehaviour
             panelMinijuego.SetActive(visible);
     }
 
+    void MostrarPanelPrevio(bool visible)
+    {
+        if (panelPrevioMinijuego != null)
+            panelPrevioMinijuego.SetActive(visible);
+    }
+
     void RestaurarTransformBandeja()
     {
         if (rectBandeja == null || !bandejaInicialGuardada) return;
@@ -319,5 +377,55 @@ public class MinijuegoServirPEDIDO : MonoBehaviour
         rectBandeja.localRotation = rotacionInicialBandeja;
         progresoDescenso = 0f;
         progresoTiming = 0f;
+    }
+
+    void ResolverReferenciasAutomaticas()
+    {
+        if (panelPrevioMinijuego == null)
+        {
+            Transform encontrado = BuscarTransformPorNombre(transform, "PanelMinijuegos");
+            if (encontrado != null)
+                panelPrevioMinijuego = encontrado.gameObject;
+        }
+
+        if (panelMinijuego == null)
+        {
+            Transform encontrado = BuscarTransformPorNombre(transform, "VentanaJuego");
+            if (encontrado != null)
+                panelMinijuego = encontrado.gameObject;
+        }
+
+        if (textoPanelPrevio == null && panelPrevioMinijuego != null)
+        {
+            Transform encontrado = BuscarTransformPorNombre(panelPrevioMinijuego.transform, "TextoMinijuegos");
+            if (encontrado != null)
+                textoPanelPrevio = encontrado.GetComponent<TextMeshProUGUI>();
+        }
+
+        if (rectBandeja == null && imagenBandeja != null)
+        {
+            rectBandeja = imagenBandeja.rectTransform;
+            posicionInicial = rectBandeja.anchoredPosition;
+            rotacionInicialBandeja = rectBandeja.localRotation;
+            bandejaInicialGuardada = true;
+        }
+    }
+
+    Transform BuscarTransformPorNombre(Transform raiz, string nombreBuscado)
+    {
+        if (raiz == null || string.IsNullOrWhiteSpace(nombreBuscado))
+            return null;
+
+        if (raiz.name == nombreBuscado)
+            return raiz;
+
+        for (int i = 0; i < raiz.childCount; i++)
+        {
+            Transform encontrado = BuscarTransformPorNombre(raiz.GetChild(i), nombreBuscado);
+            if (encontrado != null)
+                return encontrado;
+        }
+
+        return null;
     }
 }
