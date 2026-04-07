@@ -97,7 +97,6 @@ public class CookingMinigame : MonoBehaviour
             }
         }
 
-        Debug.LogError($"¡Ojo! No se encontró el sprite para: '{nombre}'. Revisa el Inspector.");
         return null;
     }
 
@@ -410,9 +409,6 @@ public class CookingMinigame : MonoBehaviour
             EntregaBandeja entrega = EntregaBandeja.ObtenerInstancia();
             bool entregaIniciada = entrega != null &&
                                    entrega.IniciarEntrega("hamburguesa");
-
-            if (entrega == null)
-                Debug.LogWarning("CookingMinigame: no se encontró EntregaBandeja en la escena.");
 
             if (entregaIniciada)
                 MinigameManager.Instance?.CerrarMinijuegoPausa();

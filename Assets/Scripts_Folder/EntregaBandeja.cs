@@ -97,6 +97,8 @@ public class EntregaBandeja : MonoBehaviour
     private bool colliderEntregaEraTrigger = false;
     private EntregaMesaTriggerRelay relayEntregaMesa;
 
+    public bool HayEntregaActiva => estadoActual != EstadoEntrega.Inactiva;
+
     void Awake()
     {
         Instance = this;
@@ -116,8 +118,6 @@ public class EntregaBandeja : MonoBehaviour
 
         return Instance;
     }
-
-    public bool HayEntregaActiva => estadoActual != EstadoEntrega.Inactiva;
 
     void Start()
     {
@@ -159,10 +159,7 @@ public class EntregaBandeja : MonoBehaviour
     public bool IniciarEntrega(string pedido)
     {
         if (estadoActual != EstadoEntrega.Inactiva)
-        {
-            Debug.LogWarning("EntregaBandeja: ya hay una entrega en curso.");
             return false;
-        }
 
         MesaEntregaConfig[] mesasConfiguradasDisponibles = ObtenerMesasConfiguradasDisponibles();
         if (mesasConfiguradasDisponibles != null && mesasConfiguradasDisponibles.Length > 0)
@@ -178,10 +175,7 @@ public class EntregaBandeja : MonoBehaviour
         {
             Transform[] mesasDisponibles = ObtenerMesasDisponibles();
             if (mesasDisponibles == null || mesasDisponibles.Length == 0)
-            {
-                Debug.LogWarning("EntregaBandeja: no hay mesas asignadas.");
                 return false;
-            }
 
             mesaObjetivo = mesasDisponibles[Random.Range(0, mesasDisponibles.Length)];
             mesaObjetivoConfig = null;
@@ -190,22 +184,13 @@ public class EntregaBandeja : MonoBehaviour
         }
 
         if (mesaObjetivo == null)
-        {
-            Debug.LogWarning("EntregaBandeja: no hay mesas asignadas.");
             return false;
-        }
 
         nombrePedido = string.IsNullOrEmpty(pedido) ? "pedido" : pedido;
         PrepararTriggerEntrega();
-
-        if (mesaObjetivoController == null)
-            Debug.LogWarning($"EntregaBandeja: la mesa '{mesaObjetivo.name}' no tiene TableController en el objeto, hijos o padres.");
-
         mesaObjetivoController?.ReceiveNewOrder();
 
         BandejaHUD bandeja = BuscarBandejaHUD();
-        if (bandeja == null)
-            Debug.LogWarning("EntregaBandeja: no se encontro BandejaHUD en la escena.");
         bandeja?.ActivarModoEntrega();
 
         if (prefabIndicador != null)
@@ -222,11 +207,6 @@ public class EntregaBandeja : MonoBehaviour
 
         estadoActual = EstadoEntrega.EnCamino;
         ActualizarTextoMetaEnCamino(false);
-        Debug.Log($"Entrega iniciada -> {nombrePedido} para {mesaObjetivo.name}");
-        if (colliderEntregaMesa != null)
-            Debug.Log($"EntregaBandeja: collider de entrega detectado en {colliderEntregaMesa.gameObject.name}");
-        else
-            Debug.LogWarning("EntregaBandeja: no se encontró SphereCollider de entrega, usando radio fallback.");
         return true;
     }
 
@@ -309,14 +289,9 @@ public class EntregaBandeja : MonoBehaviour
             panelEntrega = ObtenerPanelRaiz(minijuegoServirPedido.gameObject);
 
         if (panelEntrega == null)
-        {
-            Debug.LogWarning("EntregaBandeja: no hay panelEntrega asignado para abrir el minijuego.");
             return;
-        }
 
         estadoActual = EstadoEntrega.EnMinijuego;
-
-        Debug.Log($"EntregaBandeja: intentando abrir panel {panelEntrega.name} desde el flujo de debug.");
         MostrarPromptEntrega(false);
 
         if (debug != null && debug.AbrirServirPedidoDesdeEntrega(minijuegoServirPedido, nombrePedido, nombreMesa))
@@ -391,13 +366,13 @@ public class EntregaBandeja : MonoBehaviour
         if (!EsColliderDelJugador(other))
             return;
 
-        Debug.Log($"EntregaBandeja: jugador entro al trigger de {mesaObjetivo?.name}.");
         MostrarPromptEntrega(true);
     }
 
     void ActualizarTextoMetaEnCamino(bool cerca)
     {
-        if (textoMeta == null || mesaObjetivo == null) return;
+        if (textoMeta == null || mesaObjetivo == null)
+            return;
 
         string accion = cerca
             ? "Apoyando bandeja..."
@@ -428,10 +403,12 @@ public class EntregaBandeja : MonoBehaviour
     TableController BuscarMesaController(Transform mesa)
     {
         TableController controller = mesa.GetComponent<TableController>();
-        if (controller != null) return controller;
+        if (controller != null)
+            return controller;
 
         controller = mesa.GetComponentInChildren<TableController>(true);
-        if (controller != null) return controller;
+        if (controller != null)
+            return controller;
 
         return mesa.GetComponentInParent<TableController>();
     }
@@ -447,10 +424,12 @@ public class EntregaBandeja : MonoBehaviour
         }
 
         SphereCollider collider = mesa.GetComponent<SphereCollider>();
-        if (collider != null) return collider;
+        if (collider != null)
+            return collider;
 
         collider = mesa.GetComponentInChildren<SphereCollider>(true);
-        if (collider != null) return collider;
+        if (collider != null)
+            return collider;
 
         return mesa.GetComponentInParent<SphereCollider>();
     }
@@ -522,16 +501,36 @@ public class EntregaBandeja : MonoBehaviour
 
                 for (int i = 0; i < transforms.Length; i++)
                 {
-                    if (transforms[i] != null && transforms[i].name == nombreMesa)
-                    {
-                        mesasEncontradas.Add(transforms[i]);
-                        break;
-                    }
+                    if (transforms[i] == null || transforms[i].name != nombreMesa)
+                        continue;
+
+                    if (!transforms[i].gameObject.activeInHierarchy)
+                        continue;
+
+                    mesasEncontradas.Add(transforms[i]);
+                    break;
                 }
             }
 
             if (mesasEncontradas.Count > 0)
                 return mesasEncontradas.ToArray();
+        }
+
+        if (mesas != null && mesas.Length > 0)
+        {
+            System.Collections.Generic.List<Transform> mesasActivas = new System.Collections.Generic.List<Transform>();
+            for (int i = 0; i < mesas.Length; i++)
+            {
+                if (mesas[i] == null)
+                    continue;
+
+                if (!mesas[i].gameObject.activeInHierarchy)
+                    continue;
+
+                mesasActivas.Add(mesas[i]);
+            }
+
+            return mesasActivas.ToArray();
         }
 
         return mesas;
@@ -548,7 +547,11 @@ public class EntregaBandeja : MonoBehaviour
             if (mesasConfiguradas[i] == null)
                 continue;
 
-            if (mesasConfiguradas[i].ObtenerTransform() == null)
+            Transform transformMesa = mesasConfiguradas[i].ObtenerTransform();
+            if (transformMesa == null)
+                continue;
+
+            if (!transformMesa.gameObject.activeInHierarchy)
                 continue;
 
             lista.Add(mesasConfiguradas[i]);

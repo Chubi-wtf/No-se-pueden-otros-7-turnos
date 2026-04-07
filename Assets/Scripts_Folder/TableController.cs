@@ -28,16 +28,20 @@ public class TableController : MonoBehaviour
 
     void Update()
     {
-        if (!isWaitingForFood) return;
+        if (!isWaitingForFood)
+            return;
 
         timeRemaining -= Time.deltaTime;
         float pct = timeRemaining / maxWaitTime;
 
         if (exclamationMark != null)
         {
-            if (pct > 0.5f) exclamationMark.color = colorGood;
-            else if (pct > 0.2f) exclamationMark.color = colorWarning;
-            else if (pct > 0f) exclamationMark.color = colorCritical;
+            if (pct > 0.5f)
+                exclamationMark.color = colorGood;
+            else if (pct > 0.2f)
+                exclamationMark.color = colorWarning;
+            else if (pct > 0f)
+                exclamationMark.color = colorCritical;
         }
 
         if (timeRemaining <= 0f)
@@ -75,7 +79,7 @@ public class TableController : MonoBehaviour
             SanidadManager.Instance?.RecibirDanioMental();
     }
 
-    private void FailOrder()
+    void FailOrder()
     {
         isWaitingForFood = false;
 

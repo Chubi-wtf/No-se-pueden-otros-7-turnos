@@ -39,6 +39,7 @@ public class MinijuegoCafe : MonoBehaviour
 
     [Header("Ajustes Fase 2")]
     public Sprite[] posiblesCafes;
+    public Sprite[] imagenesProgresoSecuencia;
     public int longitudSecuencia = 5;
 
     [Header("Tiempo total")]
@@ -98,8 +99,7 @@ public class MinijuegoCafe : MonoBehaviour
             barraTemporizador.value = tiempoRestante;
         }
 
-        if (posiblesCafes != null && posiblesCafes.Length > 0 && imagenCafe != null)
-            imagenCafe.sprite = posiblesCafes[Random.Range(0, posiblesCafes.Length)];
+        ActualizarImagenCafe();
 
         if (sliderCafe != null)
         {
@@ -231,12 +231,14 @@ public class MinijuegoCafe : MonoBehaviour
             if (tecla == secuenciaActual[indiceActual])
             {
                 indiceActual++;
+                ActualizarImagenCafe();
                 ActualizarSecuencia();
                 if (indiceActual >= secuenciaActual.Count) Ganar();
             }
             else
             {
                 indiceActual = 0;
+                ActualizarImagenCafe();
                 ActualizarSecuencia();
                 if (textoSecuencia != null)
                     StartCoroutine(FlashError());
@@ -261,7 +263,7 @@ public class MinijuegoCafe : MonoBehaviour
                                             : "Fase 2 / 2 - Revuelve la crema";
 
         if (textoInstrFase1 != null)
-            textoInstrFase1.text = "Mantén <b>SPACE</b> para inclinar y servir.\nAl pasar el 70% comenzará a caer el café.";
+            textoInstrFase1.text = "Manten Espacio para dejar caer el cafe";
 
         if (textoInstrFase2 != null)
             textoInstrFase2.text = "Sigue la secuencia de teclas:\n<b>W A S D Q E F</b>";
@@ -283,6 +285,39 @@ public class MinijuegoCafe : MonoBehaviour
         textoSecuencia.text = txt;
     }
 
+    void ActualizarImagenCafe()
+    {
+        if (imagenCafe == null)
+            return;
+
+        Sprite[] spritesFuente = null;
+
+        if (imagenesProgresoSecuencia != null && imagenesProgresoSecuencia.Length > 0)
+            spritesFuente = imagenesProgresoSecuencia;
+        else if (posiblesCafes != null && posiblesCafes.Length > 0)
+            spritesFuente = posiblesCafes;
+
+        if (spritesFuente == null || spritesFuente.Length == 0)
+            return;
+
+        if (spritesFuente.Length == 1)
+        {
+            imagenCafe.sprite = spritesFuente[0];
+            return;
+        }
+
+        float progreso = longitudSecuencia > 0
+            ? Mathf.Clamp01((float)indiceActual / longitudSecuencia)
+            : 0f;
+
+        int indiceSprite = Mathf.Clamp(
+            Mathf.RoundToInt(progreso * (spritesFuente.Length - 1)),
+            0,
+            spritesFuente.Length - 1);
+
+        imagenCafe.sprite = spritesFuente[indiceSprite];
+    }
+
     void Ganar()
     {
         if (faseActual == Fase.Terminado) return;
@@ -296,9 +331,6 @@ public class MinijuegoCafe : MonoBehaviour
 
         EntregaBandeja entrega = EntregaBandeja.ObtenerInstancia();
         bool entregaIniciada = entrega != null && entrega.IniciarEntrega("cafe");
-
-        if (entrega == null)
-            Debug.LogWarning("MinijuegoCafe: no se encontró EntregaBandeja en la escena.");
 
         if (entregaIniciada)
             MinigameManager.Instance?.CerrarMinijuegoPausa();

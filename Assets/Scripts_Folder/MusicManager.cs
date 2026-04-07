@@ -7,6 +7,7 @@ public class MusicaManager : MonoBehaviour
 
     [Header("Audio")]
     public AudioClip musicaJuego;
+    public AudioClip musicaDerrota;
 
     [Header("Pitch segun cordura")]
     public float pitchMaximo = 1.0f;
@@ -28,6 +29,7 @@ public class MusicaManager : MonoBehaviour
     private float porcentajeCordura = 1f;
     private float pitchExtraNivel = 0f;
     private float pitchExtraTurno = 0f;
+    private bool reproduciendoMusicaDerrota = false;
 
     void Awake()
     {
@@ -48,12 +50,18 @@ public class MusicaManager : MonoBehaviour
 
     void Start()
     {
-        if (musicaJuego != null && !audioSource.isPlaying)
-            audioSource.Play();
+        ReproducirMusicaJuego();
     }
 
     void Update()
     {
+        if (reproduciendoMusicaDerrota)
+        {
+            if (audioSource != null)
+                audioSource.pitch = Mathf.Lerp(audioSource.pitch, 1f, velocidadPitch * Time.unscaledDeltaTime);
+            return;
+        }
+
         float pitchMinNivel = pitchMinimo + pitchExtraNivel;
         float pitchMaxNivel = pitchMaximo + pitchExtraNivel;
 
@@ -101,7 +109,50 @@ public class MusicaManager : MonoBehaviour
                 break;
         }
 
-        if (audioSource != null && musicaJuego != null && !audioSource.isPlaying)
+        if (!reproduciendoMusicaDerrota && audioSource != null && musicaJuego != null && !audioSource.isPlaying)
             audioSource.Play();
+    }
+
+    public void ReproducirMusicaJuego()
+    {
+        reproduciendoMusicaDerrota = false;
+
+        if (audioSource == null)
+            return;
+
+        if (musicaJuego == null)
+        {
+            audioSource.Stop();
+            return;
+        }
+
+        if (audioSource.clip != musicaJuego)
+            audioSource.clip = musicaJuego;
+
+        audioSource.loop = true;
+        audioSource.pitch = 1f;
+
+        if (!audioSource.isPlaying)
+            audioSource.Play();
+    }
+
+    public void ReproducirMusicaDerrota()
+    {
+        reproduciendoMusicaDerrota = true;
+
+        if (audioSource == null)
+            return;
+
+        if (musicaDerrota == null)
+        {
+            return;
+        }
+
+        if (audioSource.clip != musicaDerrota)
+            audioSource.clip = musicaDerrota;
+
+        audioSource.loop = true;
+        audioSource.pitch = 1f;
+        audioSource.Play();
     }
 }
